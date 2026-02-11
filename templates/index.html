@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noemi | Software Engineer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="#" class="nav-logo"></a>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#about">About</a>
+                <a href="#tech">Tech</a>
+                <a href="#featured-projects">Projects</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 3V4M12 20V21M4.22 4.22L4.93 4.93M19.07 19.07L19.78 19.78M1 12H2M22 12H23M4.22 19.78L4.93 19.07M19.07 4.93L19.78 4.22M12 17C14.76 17 17 14.76 17 12C17 9.24 14.76 7 12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17Z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+
+
+    <main class="container">
+
+        <!-- Hero / Header -->
+        <section class="hero-section">
+            <header class="hero-header">
+                <div class="hero-text">
+                    <h1 class="hero-name">Noemi Golla</h1>
+                    <div class="hero-subtitle">
+                        Software Engineer based in the Philippines.<br>
+                        Specializing in <span id="typewriter" class="typewriter-text"></span><span
+                            class="cursor">&nbsp;</span>
+                    </div>
+                </div>
+                <div class="hero-avatar-container">
+                    <div class="hero-avatar-ring"></div>
+                    <img src="{{ url_for('static', filename='assets/profile-day.jpg') }}" alt="Noemi Golla"
+                        class="hero-avatar-img" id="profile-img">
+                </div>
+            </header>
+
+            <div class="hero-links">
+                <a href="#featured-projects">View Projects</a>
+                <a href="/static/assets/resume.pdf" target="_blank" class="btn-shimmer">Download Resume</a>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- About (Brief) -->
+        <section id="about" class="reveal">
+            <h2>About</h2>
+            <p style="margin-bottom: 1rem;">
+                I specialize in developing practical, real-world web applications, focusing on creating impactful
+                solutions across the full stack. My expertise spans clean, responsive front-end design to robust
+                back-end logic, data processing, and AI integrations.
+            </p>
+            <p style="margin-bottom: 1rem;">
+                I have successfully completed several projects aimed at addressing real-world challenges. Notable
+                examples include an e-commerce pre-order system for a home bakery, a full-stack trading card hub
+                featuring automated data scraping, and AI-powered tools designed for enhanced decision-making and
+                portfolio management. I am particularly passionate about leveraging modern web technologies, Python, and
+                automation, along with large language models, to build efficient and effective systems.
+            </p>
+            <p>
+                I am eager to further develop my skills through hands-on projects and opportunities where I can
+                contribute meaningfully, learn quickly, and create innovative software solutions.
+            </p>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Tech Stack -->
+        <section id="tech" class="reveal">
+            <h2>Tech Stack</h2>
+            <div class="tech-container reveal-stagger">
+                <div class="tech-tag" style="--brand-color: #3776AB; --delay: 0.1s"><span>Python</span></div>
+                <div class="tech-tag" style="--brand-color: #000000; --delay: 0.15s"><span>Flask</span></div>
+                <div class="tech-tag" style="--brand-color: #F7DF1E; --delay: 0.2s"><span>JavaScript</span></div>
+                <div class="tech-tag" style="--brand-color: #61DAFB; --delay: 0.25s"><span>React</span></div>
+                <div class="tech-tag" style="--brand-color: #336791; --delay: 0.3s"><span>PostgreSQL</span></div>
+                <div class="tech-tag" style="--brand-color: #2496ED; --delay: 0.35s"><span>Docker</span></div>
+                <div class="tech-tag" style="--brand-color: #FF9900; --delay: 0.4s"><span>AWS</span></div>
+                <div class="tech-tag" style="--brand-color: #F05032; --delay: 0.45s"><span>Git</span></div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Featured Projects -->
+        <section id="featured-projects" class="reveal">
+            <h2>Featured Projects</h2>
+            <div class="project-list reveal-stagger">
+
+                <!-- OPTCG PH Hub -->
+                <div class="project-item" style="--delay: 0.1s">
+                    <h3>OPTCG PH Hub</h3>
+                    <p>A comprehensive One Piece Trading Card Game hub for the Philippine community, featuring card
+                        browsing, collection tracking, and automated data management through scraping and translation
+                        tools.</p>
+                    <div class="mini-tech-stack">
+                        <span class="mini-tag">Next.js 16</span>
+                        <span class="mini-tag">Prisma ORM</span>
+                        <span class="mini-tag">SQL</span>
+                        <span class="mini-tag">Tailwind CSS</span>
+                        <span class="mini-tag">Python Scripting</span>
+                        <span class="mini-tag">Vercel Analytics</span>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.9rem; opacity: 0.9;">
+                        <strong>Key Features:</strong>
+                        <ul style="margin-top: 4px; padding-left: 20px; opacity: 0.85; width: 100%;">
+                            <li>Database-driven card catalog</li>
+                            <li>Automated card scraping & translation</li>
+                            <li>Image validation pipeline</li>
+                            <li>Market & collection management</li>
+                            <li>Fully responsive UI</li>
+                        </ul>
+                    </div>
+                    <div class="hero-links" style="margin-top: 16px;">
+                        <a href="https://optcgphhub.vercel.app/" target="_blank">Visit Site</a>
+                        <a href="https://github.com/Noymiii/OPTCG_PH-Hub" target="_blank">GitHub</a>
+                    </div>
+                </div>
+
+                <!-- Batter Days -->
+                <div class="project-item" style="--delay: 0.2s">
+                    <h3>Batter Days</h3>
+                    <p>E-Commerce Order Management System for a home bakery business. A pre-order system handling
+                        product selection, scheduling, payments, and order tracking through Google Sheets integration.
+                    </p>
+                    <div class="mini-tech-stack">
+                        <span class="mini-tag">React 19</span>
+                        <span class="mini-tag">TypeScript</span>
+                        <span class="mini-tag">Vite</span>
+                        <span class="mini-tag">Tailwind CSS</span>
+                        <span class="mini-tag">Google Apps Script</span>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.9rem; opacity: 0.9;">
+                        <strong>Key Features:</strong>
+                        <ul style="margin-top: 4px; padding-left: 20px; opacity: 0.85; width: 100%;">
+                            <li>Smart pickup calendar with business rules</li>
+                            <li>Shopping cart with dynamic pricing</li>
+                            <li>QR-based payment workflow</li>
+                            <li>Proof-of-payment uploads</li>
+                            <li>Solves a real business problem</li>
+                        </ul>
+                    </div>
+                    <div class="hero-links" style="margin-top: 16px;">
+                        <a href="https://batterdays.netlify.app/" target="_blank">Visit Site</a>
+                        <a href="https://github.com/Noymiii/Batter_Days" target="_blank">GitHub</a>
+                    </div>
+                </div>
+
+                <!-- HEAL (Health Electronic Access Log) -->
+                <div class="project-item" style="--delay: 0.3s">
+                    <h3>HEAL (Health Electronic Access Log)</h3>
+                    <p>Comprehensive health tracking application focused on user wellness and medical data management,
+                        ensuring privacy and ease of access.</p>
+                    <div class="mini-tech-stack">
+                        <span class="mini-tag">Python</span>
+                        <span class="mini-tag">React</span>
+                        <span class="mini-tag">SQL</span>
+                        <span class="mini-tag">Encryption</span>
+                        <span class="mini-tag">Secure Auth</span>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.9rem; opacity: 0.9;">
+                        <strong>Key Features:</strong>
+                        <ul style="margin-top: 4px; padding-left: 20px; opacity: 0.85; width: 100%;">
+                            <li>Secure medical data storage & retrieval</li>
+                            <li>User wellness tracking dashboard</li>
+                            <li>Privacy-focused architecture</li>
+                            <li>Role-based access control</li>
+                        </ul>
+                    </div>
+                    <div class="hero-links" style="margin-top: 16px;">
+                        <a href="{{ url_for('static', filename='assets/heal-demo.html') }}" target="_blank">Visit
+                            Site</a>
+                        <a href="https://github.com/Noymiii/H.E.A.L.-Health-Electronic-Access-Log-"
+                            target="_blank">GitHub</a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Mini Projects & Experiments -->
+        <section id="mini-projects" class="reveal">
+            <h2>Mini Projects & Experiments</h2>
+
+            <!-- Filter Controls -->
+            <div class="filter-container reveal-stagger">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="python" style="--brand-color: #3776AB">Python</button>
+                <button class="filter-btn" data-filter="react" style="--brand-color: #61DAFB">React</button>
+                <button class="filter-btn" data-filter="ui" style="--brand-color: #e34c26">UI/UX</button>
+            </div>
+
+            <div class="mini-project-grid reveal-stagger">
+
+                <!-- Swiss Blade -->
+                <div class="mini-project-card" data-category="python automation" style="--delay: 0.1s">
+                    <div class="mini-card-content">
+                        <div class="mini-card-header">
+                            <h4>Swiss Blade</h4>
+                            <a href="https://github.com/Noymiii/office-automation-suite" target="_blank"
+                                class="mini-link-icon" title="View Code">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                                    </path>
+                                </svg>
+                            </a>
+                        </div>
+                        <p>Multi-purpose utility tool for file management and automation.</p>
+                        <div class="mini-tech-stack">
+                            <span class="mini-tag">Python</span>
+                            <span class="mini-tag">Automation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Decision -->
+                <div class="mini-project-card" data-category="python ai" style="--delay: 0.15s">
+                    <div class="mini-card-content">
+                        <div class="mini-card-header">
+                            <h4>AI Decision</h4>
+                            <a href="https://github.com/Noymiii/AI_decision-maker" target="_blank"
+                                class="mini-link-icon" title="View Code">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                                    </path>
+                                </svg>
+                            </a>
+                        </div>
+                        <p>Intelligent decision support system using machine learning.</p>
+                        <div class="mini-tech-stack">
+                            <span class="mini-tag">Python</span>
+                            <span class="mini-tag">ML/AI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data App -->
+                <div class="mini-project-card" data-category="react ui data" style="--delay: 0.2s">
+                    <div class="mini-card-content">
+                        <div class="mini-card-header">
+                            <h4>Data App</h4>
+                            <a href="https://github.com/Noymiii/Interactive-Market-Analyzer" target="_blank"
+                                class="mini-link-icon" title="View Code">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                                    </path>
+                                </svg>
+                            </a>
+                        </div>
+                        <p>Specialized application for data processing and visualization.</p>
+                        <div class="mini-tech-stack">
+                            <span class="mini-tag">React</span>
+                            <span class="mini-tag">Data Viz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Project -->
+                <div class="mini-project-card" data-category="react ui" style="--delay: 0.25s">
+                    <div class="mini-card-content">
+                        <div class="mini-card-header">
+                            <h4>Dashboard Project</h4>
+                            <a href="https://github.com/Noymiii/live-dashboard" target="_blank" class="mini-link-icon"
+                                title="View Code">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                                    </path>
+                                </svg>
+                            </a>
+                        </div>
+                        <p>Analytics dashboard with real-time data monitoring.</p>
+                        <div class="mini-tech-stack">
+                            <span class="mini-tag">React</span>
+                            <span class="mini-tag">Chart.js</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Contact Me -->
+        <section id="contact" class="reveal">
+            <h2>Contact Me</h2>
+            <div class="contact-grid reveal-stagger">
+
+                <!-- Email -->
+                <a href="mailto:noemigolla23@gmail.com" class="contact-card" style="--delay: 0.1s">
+                    <svg class="contact-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <span class="contact-text">Email</span>
+                </a>
+
+                <!-- LinkedIn -->
+                <a href="https://www.linkedin.com/in/noemi-golla-740b62365/" target="_blank" class="contact-card"
+                    style="--delay: 0.2s">
+                    <svg class="contact-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <rect x="2" y="9" width="4" height="12" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <span class="contact-text">LinkedIn</span>
+                </a>
+
+                <!-- GitHub -->
+                <a href="https://github.com/Noymiii" target="_blank" class="contact-card" style="--delay: 0.3s">
+                    <svg class="contact-icon" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="contact-text">GitHub</span>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer reveal">
+            &copy; 2026 Noemi. All rights reserved.
+        </footer>
+
+    </main>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <!-- Welcome Bubble -->
+        <div id="welcome-bubble" class="welcome-bubble">
+            <span class="bubble-text">Hi! Need help? 👋</span>
+            <span class="bubble-close">&times;</span>
+        </div>
+
+        <!-- Chat Window -->
+        <div id="chat-window" class="chat-window hidden">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="chat-profile">
+                    <div class="chat-avatar">
+                        <img src="{{ url_for('static', filename='assets/profile-day.jpg') }}" alt="AI">
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="chat-info">
+                        <span class="chat-name">Noemi AI</span>
+                        <span class="chat-status">Online</span>
+                    </div>
+                </div>
+                <button id="close-chat" class="close-btn" aria-label="Close chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages" class="chat-messages">
+                <div class="message bot-message">
+                    Hi there! I'm Noemi's AI assistant. I can tell you about her <strong>projects</strong>, <strong>skills</strong>, or how to <strong>contact</strong> her. What would you like to know?
+                </div>
+            </div>
+
+            <!-- Quick Prompts (Chips) -->
+            <div class="quick-prompts" id="quick-prompts">
+                <button class="chip" onclick="sendQuickMessage('Tell me about your skills')">Skills 🛠️</button>
+                <button class="chip" onclick="sendQuickMessage('Show me your projects')">Projects 🚀</button>
+                <button class="chip" onclick="sendQuickMessage('How can I contact you?')">Contact 📬</button>
+                <button class="chip" onclick="sendQuickMessage('Download resume')">Resume 📄</button>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="typing-indicator hidden">
+                <span></span><span></span><span></span>
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Ask me anything..." autocomplete="off">
+                <button id="send-btn" aria-label="Send message">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toggle Button -->
+        <button id="chat-toggle" class="chat-toggle-btn" aria-label="Open chat">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M21 11.5C21 16.75 16.97 21 12 21C10.5 21 9.1 20.6 7.85 19.9L3 21L4.35 16.85C3.5 15.3 3 13.5 3 11.5C3 6.25 7.03 2 12 2C16.97 2 21 6.25 21 11.5Z"
+                    stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="notification-dot"></div>
+        </button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>

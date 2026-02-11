@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H.E.A.L. - Health Electronic Access Log</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- Base Styles & Variables --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #1F51FF; --primary-dark: #0D2DB8; --primary-light: #4D73FF;
+            --bg-color-light: #FDFEFF; --bg-color-dark: #0A0E27;
+            --text-color-light: #2C3E50; --text-color-dark: #E8EAED;
+            --card-bg-light: #FFFFFF; --card-bg-dark: #1A1F3A;
+            --border-color-light: #E1E8ED; --border-color-dark: #2A3254;
+            --hover-color-light: #EBF0F5; --hover-color-dark: #252B4A;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05); --shadow-hover: 0 8px 24px rgba(31, 81, 255, 0.15);
+            --font-primary: 'Poppins', sans-serif;
+        }
+        body {
+            font-family: var(--font-primary); background-color: var(--bg-color-light);
+            background-image: url('https://res.cloudinary.com/dhkhm33ud/image/upload/v1760805320/bg_c09gir.jpg');
+            background-size: cover; background-position: center center; background-attachment: fixed;
+            color: var(--text-color-light); transition: background-color 0.3s, color 0.3s; line-height: 1.6;
+        }
+        body.dark-mode { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
+
+        /* --- General Layout & Common --- */
+        .main-content { padding: 40px 30px; max-width: 1400px; margin: 20px auto; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); border-radius: 15px; }
+        body.dark-mode .main-content { background-color: rgba(10, 14, 39, 0.6); backdrop-filter: blur(5px); }
+        .page { display: none; } .page.active { display: block; animation: fadeInUp 0.5s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: var(--font-primary); }
+        .btn-primary { background: var(--primary-color); color: white; } .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(31, 81, 255, 0.4); }
+        .btn-secondary { background: #6c757d; color: white; } .btn-secondary:hover { background: #5a6268; }
+        .btn-danger { background: #dc3545; color: white; } .btn-danger:hover { background: #c82333; }
+        .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #8899a6; font-size: 15px; grid-column: 1 / -1; }
+        body.dark-mode .empty-state { color: #adb5bd;}
+        .section-card { background: var(--card-bg-light); border: 1px solid var(--border-color-light); border-radius: 14px; padding: 28px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        body.dark-mode .section-card { background: var(--card-bg-dark); border-color: var(--border-color-dark); }
+        .section-title { font-size: 19px; font-weight: 700; margin-bottom: 20px; color: var(--primary-color); }
+        .subsection-title { font-size: 16px; font-weight: 600; margin-top: 25px; margin-bottom: 15px; color: var(--text-color-light); border-bottom: 1px solid var(--border-color-light); padding-bottom: 5px;}
+        body.dark-mode .subsection-title { color: var(--text-color-dark); border-color: var(--border-color-dark); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px 30px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border-color-light); border-radius: 8px; font-size: 14px; background: var(--bg-color-light); color: var(--text-color-light); transition: border-color 0.3s; font-family: var(--font-primary); }
+        body.dark-mode .form-group input, body.dark-mode .form-group select, body.dark-mode .form-group textarea { background: var(--hover-color-dark); border-color: var(--border-color-dark); color: var(--text-color-dark);}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(31, 81, 255, 0.2); }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group input[readonly] { background-color: var(--hover-color-light); cursor: not-allowed; color: #6c757d }
+        body.dark-mode .form-group input[readonly] { background-color: var(--border-color-dark); }
+        .input-abnormal { color: #FF0000 !important; font-weight: bold; border-color: #FF0000 !important; }
+        body.dark-mode .input-abnormal { color: #FF6B6B !important; border-color: #FF6B6B !important; }
+        .table-container { overflow-x: auto; margin-top: 15px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color-light); font-size: 14px; }
+        body.dark-mode .data-table th, body.dark-mode .data-table td { border-color: var(--border-color-dark); }
+        .data-table th { background: var(--hover-color-light); font-weight: 600; color: var(--primary-dark); }
+        body.dark-mode .data-table th { background: var(--hover-color-dark); color: var(--primary-light); }
+        .data-table tbody tr:hover { background: var(--hover-color-light); }
+        body.dark-mode .data-table tbody tr:hover { background: var(--hover-color-dark); }
+        .table-actions { display: flex; gap: 8px; }
+
+        /* --- File Upload & Discharge Plan Styles --- */
+        .file-upload-area { margin-top: 15px; border: 2px dashed var(--border-color-light); border-radius: 8px; padding: 20px; text-align: center; }
+        body.dark-mode .file-upload-area { border-color: var(--border-color-dark); }
+        .file-upload-area label { font-weight: 600; cursor: pointer; color: var(--primary-color); }
+        #labResultFile { display: none; }
+        #file-preview { margin-top: 15px; max-width: 100%; max-height: 200px; border-radius: 8px; display: none; }
+        #upload-status { font-size: 14px; margin-top: 10px; font-weight: 500; }
+        #dischargePlanPlaceholder { min-height: 100px; border: 1px dashed var(--border-color-light); display: flex; align-items: center; justify-content: center; margin-top: 10px; color: #8899a6; font-style: italic;}
+        body.dark-mode #dischargePlanPlaceholder { border-color: var(--border-color-dark); color: #adb5bd;}
+        #dischargeSelectPatientDiv { margin-bottom: 30px; border-bottom: 1px solid var(--border-color-light); padding-bottom: 20px; }
+        body.dark-mode #dischargeSelectPatientDiv { border-color: var(--border-color-dark); }
+        #dischargeDataSection { display: none; }
+        
+        /* --- Other Styles (Top Bar, Dropdown, Dashboard, etc.) --- */
+        .top-bar { background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px); border-bottom: 1px solid var(--border-color-light); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; height: 75px; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        body.dark-mode .top-bar { background-color: rgba(26, 31, 58, 0.9); border-color: var(--border-color-dark); }
+        .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .logo-image { height: 45px; width: auto; }
+        .logo-text-container { display: flex; flex-direction: column; }
+        .logo-main-text { font-size: 16px; font-weight: 600; color: var(--text-color-light); line-height: 1.2;}
+        .logo-tagline { font-size: 10px; font-weight: 500; color: #6c757d; line-height: 1.2;}
+        .logo-acronym { font-size: 24px; font-weight: 700; color: var(--primary-color); line-height: 1; letter-spacing: 1px; margin-top: 2px;}
+        body.dark-mode .logo-main-text { color: var(--text-color-dark); } body.dark-mode .logo-tagline { color: #adb5bd; }
+        .nav-links { flex-grow: 1; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .nav-btn { padding: 10px 20px; font-size: 15px; border-radius: 20px; background: transparent; border: none; color: var(--text-color-light); cursor: pointer; }
+        .nav-btn:hover { background: var(--hover-color-light); color: var(--primary-color); }
+        .nav-btn.active { background: var(--primary-color); color: white; }
+        body.dark-mode .nav-btn { color: var(--text-color-dark); } body.dark-mode .nav-btn:hover { background: var(--hover-color-dark); }
+        .right-controls { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+        .icon-btn { width: 40px; height: 40px; background: transparent; border: 1px solid var(--border-color-light); color: var(--text-color-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; cursor: pointer; }
+        .icon-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .user-btn { width: 40px; height: 40px; }
+        .user-info-display { font-size: 14px; color: var(--text-color-light); font-weight: 500; display: none; white-space: nowrap; margin-right: 10px;}
+        body.dark-mode .user-info-display { color: var(--text-color-dark); }
+        body.dark-mode .icon-btn { border-color: var(--border-color-dark); color: var(--text-color-dark); }
+        .dropdown { position: relative; }
+        .dropdown-menu { position: absolute; top: 50px; right: 0; background: var(--card-bg-light); border: 1px solid var(--border-color-light); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; display: none; z-index: 1000; overflow: hidden; }
+        body.dark-mode .dropdown-menu { background: var(--card-bg-dark); border-color: var(--border-color-dark);}
+        .dropdown-menu.show { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown-item { padding: 14px 20px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-color-light); font-size: 14px; }
+        body.dark-mode .dropdown-item { border-color: var(--border-color-dark); }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--hover-color-light); color: var(--primary-color); }
+        body.dark-mode .dropdown-item:hover { background: var(--hover-color-dark); }
+        .search-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: center; padding-top: 100px; z-index: 1000; }
+        .search-modal.show { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .search-container { background: var(--card-bg-light); border-radius: 16px; padding: 30px; width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        body.dark-mode .search-container { background: var(--card-bg-dark); }
+        .search-input { width: 100%; padding: 16px; border: 2px solid var(--border-color-light); border-radius: 12px; font-size: 16px; background: var(--bg-color-light); color: var(--text-color-light); transition: border-color 0.3s; }
+        body.dark-mode .search-input { background: var(--hover-color-dark); border-color: var(--border-color-dark); color: var(--text-color-dark); }
+        .search-input:focus { outline: none; border-color: var(--primary-color); }
+        .search-results { margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .search-result-item { padding: 16px; border: 1px solid var(--border-color-light); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: var(--card-bg-light); }
+        body.dark-mode .search-result-item { background: var(--card-bg-dark); border-color: var(--border-color-dark); }
+        .search-result-item:hover { background: var(--primary-color); color: white; transform: translateX(5px); border-color: var(--primary-color); }
+        #dashboard h1, #patients h1, #dischargePlan h1, #billingRecords h1 { font-size: 36px; font-weight: 700; margin-bottom: 35px; color: var(--text-color-light); text-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+        body.dark-mode #dashboard h1, body.dark-mode #patients h1, body.dark-mode #dischargePlan h1, body.dark-mode #billingRecords h1 { color: var(--text-color-dark); text-shadow: none;}
+        #userRoleDisplay { font-weight: 500; color: #8899a6; font-size: 18px; margin-left: 15px;}
+        body.dark-mode #userRoleDisplay { color: #adb5bd;}
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; max-width: 1400px; }
+        .stat-card { color: white; padding: 24px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: rgba(255, 255, 255, 0.3); }
+        .stat-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2); }
+        .stat-card-large { padding: 32px; min-height: 180px; grid-column: span 1; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+        .stat-card-large h3 { font-size: 3.2em; margin-bottom: 12px; font-weight: 800; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); line-height: 1; }
+        .stat-card-large p { opacity: 0.95; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+        .stat-card-small { padding: 16px; min-height: 100px; align-items: center; text-align: center; grid-column: span 1; background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); }
+        .stat-card-small.medical-history { padding: 14px; min-height: 90px; }
+        .stat-card-small p { font-size: 13px; font-weight: 600; opacity: 0.95; margin-top: 8px; letter-spacing: 0.2px; line-height: 1.3; }
+        .small-card-icon { font-size: 2em; opacity: 0.9; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)); }
+        .small-cards-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 20px; max-width: 1400px; }
+        .dashboard-grid .stat-card-large:nth-child(1) { background: linear-gradient(135deg, #1F51FF, #4D73FF); }
+        .dashboard-grid .stat-card-large:nth-child(2) { background: linear-gradient(135deg, #ff9f43, #ffbe76); }
+        .dashboard-grid .stat-card-large:nth-child(3) { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .dashboard-grid .stat-card-large:nth-child(4) { background: linear-gradient(135deg, #6f42c1, #a98acc); }
+        .small-cards-grid .stat-card-small:nth-child(1) { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .small-cards-grid .stat-card-small:nth-child(2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .small-cards-grid .stat-card-small:nth-child(3) { background: linear-gradient(135deg, #28a745, #58d68d); }
+        .small-cards-grid .stat-card-small:nth-child(4) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .small-cards-grid .stat-card-small:nth-child(5) { background: linear-gradient(135deg, #fa709a, #fee140); }
+        @media (max-width: 1200px) { .small-cards-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+        @media (max-width: 900px) { .small-cards-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } .stat-card-small { padding: 14px; min-height: 90px; } .stat-card-small.medical-history { padding: 12px; min-height: 80px; } .stat-card-small p { font-size: 12px; } .small-card-icon { font-size: 1.8em; } }
+        @media (max-width: 600px) { .small-cards-grid { grid-template-columns: 1fr; gap: 14px; } .stat-card-small { padding: 12px; min-height: 80px; } .stat-card-small p { font-size: 11px; } .small-card-icon { font-size: 1.6em; } }
+        @media (max-width: 900px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } .stat-card-large { padding: 24px; min-height: 140px; } .stat-card-large h3 { font-size: 2.2em; } }
+        @media (max-width: 600px) { .dashboard-grid { grid-template-columns: 1fr; gap: 16px; } .stat-card-large { padding: 20px; min-height: 120px; } .stat-card-large h3 { font-size: 2em; } }
+        #rolePermissionsNote { padding: 15px 20px; margin-top: 25px !important; font-size: 13px; }
+        #rolePermissionsNote p { margin-bottom: 5px; font-size: 14px; } #rolePermissionsNote ul { margin-left: 15px; margin-top: 5px; } #rolePermissionsNote li { margin-bottom: 3px; }
+        body.dark-mode #rolePermissionsNote { border-top-color: var(--border-color-dark); }
+        .patients-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .patients-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .patient-card { position: relative; background: var(--card-bg-light); border: 1px solid var(--border-color-light); border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow); }
+        body.dark-mode .patient-card { background: var(--card-bg-dark); border-color: var(--border-color-dark); }
+        .patient-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--primary-color); }
+        .patient-card.critical-vitals { border: 2px solid #dc3545; background-color: #fff5f5; }
+        .vitals-alert { color: #c82333; font-size: 13px; font-weight: 600; margin-top: 12px; padding-top: 8px; border-top: 1px solid #f5c6cb; text-align: center; }
+        body.dark-mode .patient-card.critical-vitals { background-color: #2c1a1f; color: #f8d7da; border-color: #e57373 !important; }
+        body.dark-mode .patient-card.critical-vitals .patient-info h3 { color: #f8d7da; } body.dark-mode .patient-card.critical-vitals .vitals-alert { color: #ffcdd2; border-top-color: #e57373; } body.dark-mode .patient-card.critical-vitals .patient-id { color: #f5c6cb; }
+        .patient-header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+        .patient-avatar { width: 50px; height: 50px; font-size: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .patient-info h3 { font-size: 18px; margin-bottom: 5px; font-weight: 600; }
+        .patient-id { color: #6c757d; font-size: 13px; font-weight: 500; } body.dark-mode .patient-id { color: #adb5bd;}
+        .patient-details { display: flex; flex-direction: column; gap: 10px; }
+        .detail-row { display: flex; justify-content: space-between; font-size: 14px; }
+        .detail-label { color: #6c757d; font-weight: 500; } body.dark-mode .detail-label { color: #adb5bd;}
+        .delete-patient-btn { position: absolute; top: 15px; right: 15px; width: 30px; height: 30px; border: none; background: #fbebee; color: #c82333; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; transition: all 0.3s; opacity: 0.6; }
+        .delete-patient-btn:hover { background: #dc3545; color: white; transform: scale(1.1); opacity: 1; }
+        .profile-header { background: var(--card-bg-light); border-radius: 16px; padding: 32px; margin-bottom: 30px; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; }
+        body.dark-mode .profile-header { background: var(--card-bg-dark);}
+        .profile-info { display: flex; align-items: center; gap: 24px; }
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; }
+        .profile-tabs { display: flex; gap: 8px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color-light); overflow-x: auto; }
+        body.dark-mode .profile-tabs { border-color: var(--border-color-dark);}
+        .profile-tab { padding: 14px 24px; border: none; background: transparent; color: var(--text-color-light); font-size: 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; }
+        body.dark-mode .profile-tab { color: var(--text-color-dark);}
+        .profile-tab:hover { color: var(--primary-color); background: var(--hover-color-light); border-radius: 8px 8px 0 0; }
+        body.dark-mode .profile-tab:hover { background: var(--hover-color-dark); }
+        .profile-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        .back-btn { padding: 10px 20px; border: none; background: var(--hover-color-light); border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-color-light); margin-bottom: 20px; transition: all 0.3s; font-size: 14px; }
+        body.dark-mode .back-btn { background: var(--hover-color-dark); color: var(--text-color-dark); }
+        .back-btn:hover { background: var(--primary-color); color: white; }
+        .record-card { background: var(--card-bg-light); border: 1px solid var(--border-color-light); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: all 0.3s; }
+        body.dark-mode .record-card { background: var(--card-bg-dark); border-color: var(--border-color-dark); }
+        .record-card:hover { border-color: var(--primary-color); box-shadow: var(--shadow-hover); }
+        .record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color-light); }
+        body.dark-mode .record-header { border-color: var(--border-color-dark); }
+        .record-title { font-weight: 600; color: var(--primary-color); font-size: 16px; }
+        .record-actions { display: flex; gap: 8px; }
+        .action-btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .action-btn.edit { background: #ffc107; color: #000; } .action-btn.delete { background: #dc3545; color: white; }
+        .action-btn:hover { transform: scale(1.05); }
+        .record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .record-field { display: flex; flex-direction: column; gap: 4px; }
+        .record-field label { font-size: 12px; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        body.dark-mode .record-field label { color: #adb5bd; }
+        .record-field span { font-size: 14px; color: var(--text-color-light); } body.dark-mode .record-field span { color: var(--text-color-dark); }
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-pending { background: #fff3cd; color: #856404; } .status-completed { background: #d4edda; color: #155724; } .status-in-progress { background: #d1ecf1; color: #0c5460; }
+        body.dark-mode .status-pending { background: #664d03; color: #fff3cd; } body.dark-mode .status-completed { background: #0f5132; color: #d1e7dd; } body.dark-mode .status-in-progress { background: #055160; color: #cff4fc; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--card-bg-light); border-radius: 15px; padding: 32px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideDown 0.3s ease; }
+        body.dark-mode .modal-content { background: var(--card-bg-dark); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .modal-header h2 { color: var(--primary-color); font-size: 24px; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-color-light); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.3s; }
+        body.dark-mode .close-btn { color: var(--text-color-dark); }
+        .close-btn:hover { background: var(--hover-color-light); color: var(--primary-color); }
+        body.dark-mode .close-btn:hover { background: var(--hover-color-dark); }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo">
+            <img src="https://res.cloudinary.com/dhkhm33ud/image/upload/v1760805309/logo_rym5jp.jpg" alt="H.E.A.L Logo" class="logo-image">
+            <div class="logo-text-container">
+                <div class="logo-main-text">Health Electronic Access Log</div>
+                <div class="logo-tagline">Empowering Care Through Seamless Access</div>
+                <div class="logo-acronym">H.E.A.L</div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showPage('patients')">Patients</button>
+            <button class="nav-btn" onclick="showPage('dischargePlan')">Discharge Plan</button>
+            <button class="nav-btn" onclick="showPage('billingRecords')">Billing & Records</button>
+        </div>
+        <div class="right-controls">
+             <span class="user-info-display" id="userInfoDisplay">Logged in as: </span>
+            <button class="icon-btn" onclick="toggleSearch()" title="Search Patients">🔍</button>
+            <div class="dropdown">
+                <button class="user-btn icon-btn" onclick="toggleUserMenu()" id="userInitialBtn" title="User Menu">?</button>
+                <div class="dropdown-menu" id="userMenu">
+                    <div class="dropdown-item" onclick="alert('Settings feature coming soon!')">⚙️ Settings</div>
+                    <div class="dropdown-item" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</div>
+                    <div class="dropdown-item" onclick="logout()">🚪 Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-modal" id="searchModal" onclick="closeSearch(event)"> <div class="search-container" onclick="event.stopPropagation()"> <input type="text" class="search-input" id="searchInput" placeholder="Search patients by name or ID..." oninput="performSearch()"> <div class="search-results" id="searchResults"></div> </div> </div>
+
+    <div class="main-content">
+        <div id="dashboard" class="page active">
+            <h1> Dashboard <span id="userRoleDisplay"></span> </h1>
+            <div class="dashboard-grid">
+                <div class="stat-card stat-card-large" onclick="showListModal('patients')"><h3 id="totalPatients">0</h3><p>Total Patients</p></div>
+                <div class="stat-card stat-card-large" onclick="showListModal('orders')"><h3 id="totalOrders">0</h3><p>Active Orders</p></div>
+                <div class="stat-card stat-card-large" onclick="showListModal('labRequests')"><h3 id="labRequestsCount">0</h3><p>Lab Requests</p></div>
+                <div class="stat-card stat-card-large" onclick="showListModal('meds')"><h3 id="totalMedications">0</h3><p>All Medications</p></div>
+            </div>
+            <div class="small-cards-grid">
+                <div class="stat-card stat-card-small" onclick="showListModal('medHistory')"><span class="small-card-icon">📜</span><p>Medical History</p></div>
+                <div class="stat-card stat-card-small" onclick="showListModal('allOrders')"><span class="small-card-icon">🩺</span><p>All Doctor's Orders</p></div>
+                <div class="stat-card stat-card-small" onclick="showListModal('nurseNotes')"><span class="small-card-icon">📝</span><p>Nurse's Notes</p></div>
+                <div class="stat-card stat-card-small" onclick="showListModal('labs')"><span class="small-card-icon">🧪</span><p>All Lab Results</p></div>
+                <div class="stat-card stat-card-small" onclick="showListModal('vitals')"><span class="small-card-icon">💓</span><p>Vital Signs Records</p></div>
+             </div>
+             <div class="section-card" id="rolePermissionsNote">
+                 <p><strong>Note:</strong></p>
+                 <ul>
+                     <li>Only <strong>Doctors</strong> can add Medication Orders.</li>
+                     <li>Only <strong>Nurses</strong> can add Nurse's Notes.</li>
+                     <li><strong>MedTech/RadTech</strong> can update Lab Results and upload result files.</li>
+                     <li>Appropriate roles can view relevant records.</li>
+                 </ul>
+             </div>
+        </div>
+
+        <div id="patients" class="page">
+            <div class="patients-header"><h1>Patients</h1><button class="btn btn-primary" id="btnAddNewPatient" onclick="openAddPatientModal()">+ Add New Patient</button></div>
+            <div class="patients-grid" id="patientsGrid"><div class="empty-state">Loading patient data...</div></div>
+        </div>
+        
+        <div id="patientProfile" class="page">
+            <button class="back-btn" onclick="showPage('patients')">← Back to Patients</button>
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar" id="profileAvatar">J</div>
+                    <div>
+                        <h2 id="profileName" style="font-size: 28px; margin-bottom: 6px;">Patient Name</h2>
+                        <p class="patient-id" id="profileId">P0001</p>
+                        <p id="profileDetails" style="margin-top: 4px; font-size: 14px;">Age • Sex • DOB</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnEditPatientInfo" onclick="editPatientInfo()">Edit Patient Info</button>
+            </div>
+            <div class="profile-tabs">
+                <button class="profile-tab active" onclick="showTab('overview', this)">Overview</button>
+                <button class="profile-tab" onclick="showTab('medical-history', this)">Medical History</button>
+                <button class="profile-tab" onclick="showTab('doctors-orders', this)">Doctor's Orders</button>
+                <button class="profile-tab" onclick="showTab('nurses-notes', this)">Nurse's Notes</button>
+                <button class="profile-tab" onclick="showTab('laboratory', this)">Laboratory</button>
+                <button class="profile-tab" onclick="showTab('vital-signs', this)">Vital Signs</button>
+                <button class="profile-tab" onclick="showTab('medications', this)">Medications</button>
+            </div>
+            <div id="overview" class="tab-content active"><div class="section-card"><h3 class="section-title">Patient Information</h3><div id="overviewContent"></div></div></div>
+            <div id="medical-history" class="tab-content"><div class="section-card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Medical History</h3><button class="btn btn-primary" id="btnAddMedicalHistory" onclick="openAddMedicalHistoryModal()">+ Add Record</button></div><div id="medicalHistoryContent"></div></div></div>
+            <div id="doctors-orders" class="tab-content"><div class="section-card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Doctor's Orders</h3><button class="btn btn-primary" id="addOrderBtn" onclick="openAddDoctorOrderModal()">+ Add Medication Order</button></div><div id="doctorOrdersContent"></div></div></div>
+            <div id="nurses-notes" class="tab-content"><div class="section-card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Nurse's Notes</h3><button class="btn btn-primary" id="addNoteBtn" onclick="openAddNurseNoteModal()">+ Add Note</button></div><div id="nurseNotesContent"></div></div></div>
+            <div id="laboratory" class="tab-content"><div class="section-card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Laboratory Records</h3><div><button class="btn btn-primary" id="addLabBtn" onclick="openAddLabRecordModal()">+ Request Lab</button> <button class="btn btn-secondary" id="uploadLabBtn" style="display: none;" onclick="alert('Please go to a specific lab record and click \'Update\' to upload a file.')">Upload Result File</button></div></div><div id="laboratoryContent"></div></div></div>
+            <div id="vital-signs" class="tab-content">
+                <div class="section-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Vital Signs</h3><button class="btn btn-primary" id="btnAddVitals" onclick="openAddVitalsModal()">+ Record Vitals</button></div>
+                    <div id="vitalSignsContent"></div>
+                </div>
+                <div class="section-card">
+                    <h3 class="section-title">Vital Signs Graph</h3>
+                    <div id="vitalSignsGraphContainer" style="position: relative; height:40vh; width:100%;">
+                        <canvas id="vitalSignsChart"></canvas>
+                    </div>
+                    <div id="noVitalsGraphData" class="empty-state" style="display: none; min-height: 50px;">Not enough data to display graph.</div>
+                </div>
+            </div>
+            <div id="medications" class="tab-content"><div class="section-card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;"><h3 class="section-title" style="margin: 0;">Medications</h3><button class="btn btn-primary" id="btnAddMedication" onclick="openAddMedicationModal()">+ Add Medication</button></div><div id="medicationsContent"></div></div></div>
+        </div>
+
+        <div id="dischargePlan" class="page">
+            <div class="section-card">
+                <h1>Discharge Plan</h1>
+                <div id="dischargeSelectPatientDiv" class="form-group">
+                     <label for="dischargeSelectPatient">Select Patient for Discharge Plan:</label>
+                     <select id="dischargeSelectPatient" onchange="loadDischargeDataForPatient(this.value)">
+                         <option value="">-- Select a Patient --</option>
+                     </select>
+                 </div>
+                 <div id="dischargeDataSection" style="display: none;">
+                    <form id="dischargePlanForm" onsubmit="saveDischargePlan(event)">
+                        <input type="hidden" id="dischargePlanId">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Admission Date</label><input type="date" id="dpAdmissionDate"></div>
+                            <div class="form-group"><label>Discharge Date</label><input type="date" id="dpDischargeDate"></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Admission Diagnoses</label><textarea id="dpAdmissionDiagnoses"></textarea></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Discharge Diagnoses</label><textarea id="dpDischargeDiagnoses"></textarea></div>
+                            <div class="form-group"><label>Consults</label><textarea id="dpConsults"></textarea></div>
+                            <div class="form-group"><label>Procedures</label><textarea id="dpProcedures"></textarea></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>History of Present Illness (HPI)</label><textarea id="dpHPI"></textarea></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Hospital Course</label><textarea id="dpHospitalCourse"></textarea></div>
+                            <div class="form-group"><label>Discharge To</label><input type="text" id="dpDischargeTo"></div>
+                            <div class="form-group"><label>Discharge Condition</label><input type="text" id="dpDischargeCondition"></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Discharge Medications</label><textarea id="dpDischargeMedications"></textarea></div>
+                            <div class="form-group"><label>Pending Labs</label><textarea id="dpPendingLabs"></textarea></div>
+                            <div class="form-group"><label>Follow-Up</label><textarea id="dpFollowUp"></textarea></div>
+                            <div class="form-group"><label>Copy To</label><input type="text" id="dpCopyTo"></div>
+                        </div>
+                        <div class="btn-group" style="justify-content: flex-end;">
+                            <button type="submit" class="btn btn-primary">Save Discharge Plan</button>
+                        </div>
+                    </form>
+                 </div>
+                 <div id="dischargePlanPlaceholder" class="empty-state" style="display: block; padding: 20px;">Select a patient to view or create a discharge plan.</div>
+             </div>
+        </div>
+
+        <div id="billingRecords" class="page">
+            <div class="section-card">
+                <h1>Billing & Records</h1>
+                <div id="billingSelectPatientDiv" class="form-group">
+                    <label for="billingSelectPatient">Select Patient to View Billing:</label>
+                    <select id="billingSelectPatient" onchange="loadBillingDataForPatient(this.value)">
+                        <option value="">-- Select a Patient --</option>
+                    </select>
+                </div>
+                <div id="billingDataSection" style="display: none;">
+                    <h3 class="subsection-title">Insurance Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Insurance Provider</label><select id="billingInsuranceProvider"></select></div>
+                        <div class="form-group"><label>Policy/Member Number</label><input type="text" id="billingPolicyNumber"></div>
+                        <div class="form-group"><label>Name of Insured</label><input type="text" id="billingInsuredName"></div>
+                        <div class="form-group"><label>Coverage Type</label><input type="text" id="billingCoverageType"></div>
+                        <div class="form-group"><label>Approval/Authorization No.</label><input type="text" id="billingAuthNo"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 10px;">
+                        <h3 class="subsection-title" style="margin: 0; border: none;">Billing Information</h3>
+                        <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px;" onclick="openAddBillingItemModal()">+ Add Item</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="billingItemsTable">
+                            <thead><tr><th>Date of Service</th><th>Description</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="billingItemsEmpty" class="empty-state" style="padding: 20px;">No billing items recorded.</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 10px;">
+                        <h3 class="subsection-title" style="margin: 0; border: none;">Payment Record</h3>
+                        <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px;" onclick="openAddPaymentModal()">+ Add Payment</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="paymentRecordTable">
+                            <thead><tr><th>Date</th><th>Payment Method</th><th>Amount Paid</th><th>Balance</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="paymentRecordEmpty" class="empty-state" style="padding: 20px;">No payments recorded.</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 10px;">
+                        <h3 class="subsection-title" style="margin: 0; border: none;">Claims Management</h3>
+                        <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px;" onclick="openAddClaimModal()">+ Add Claim</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="claimsTable">
+                            <thead><tr><th>Claim No.</th><th>Date Filed</th><th>Status</th><th>EOB Received</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="claimsEmpty" class="empty-state" style="padding: 20px;">No claims recorded.</div>
+                    <h3 class="subsection-title" style="margin-top: 25px;">Audit and Record Log</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="auditLogTable">
+                            <thead><tr><th>Date/Time</th><th>Staff Name</th><th>Action Taken</th><th>Remarks</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="auditLogEmpty" class="empty-state" style="padding: 20px;">No audit logs found.</div>
+                    <div class="btn-group" style="justify-content: flex-end;">
+                        <button type="button" class="btn btn-primary" onclick="savePatientInsuranceInfo()">Save Billing Info</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="loginModal"> <div class="modal-content"> <div class="modal-header" style="justify-content: center;"><h2>H.E.A.L. Login</h2></div> <form id="loginForm" onsubmit="handleLogin(event)" style="text-align: center;"> <div class="form-group"> <label for="loginRole">Select Role:</label> <select id="loginRole" required onchange="populateLoginNames()"> <option value="">-- Select Role --</option> <option value="Doctor">Doctor</option> <option value="Nurse">Nurse</option> <option value="MEDTECH">MedTech</option> <option value="RADTECH">RadTech</option> </select> </div> <div class="form-group"> <label for="loginName">Select Name:</label> <select id="loginName" required> <option value="">-- Select Name --</option> </select> </div> <div class="form-group"> <label for="loginPassword">Password:</label> <input type="password" id="loginPassword" required> </div> <div id="loginError" style="color: #dc3545; font-size: 14px; margin-top: 15px; display: none;">Invalid credentials. Please try again.</div> <div class="btn-group" style="justify-content: center;"> <button type="submit" class="btn btn-primary">Login</button> </div> </form> </div> </div>
+    <div class="modal" id="addPatientModal"> <div class="modal-content"> <div class="modal-header"><h2>Add New Patient</h2><button class="close-btn" onclick="closeModal('addPatientModal')">×</button></div> <form id="patientForm" onsubmit="savePatient(event)"> <div class="form-grid"> <div class="form-group"><label>Patient Name *</label><input type="text" id="patientName" required></div> <div class="form-group"><label>Date of Birth *</label><input type="date" id="patientDOB" required onchange="calculateAge()"></div> <div class="form-group"><label>Age</label><input type="number" id="patientAge" readonly></div> <div class="form-group"><label>Sex *</label><select id="patientSex" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div> <div class="form-group"><label>Religion</label><select id="patientReligion"><option value="">-- Select --</option></select></div> <div class="form-group"><label>Blood Type</label><select id="patientBloodType"><option value="">-- Select --</option></select></div> <div class="form-group"><label>Date of Admission</label><input type="date" id="admissionDate"></div> <div class="form-group"><label>Guardian</label><input type="text" id="guardian"></div> <div class="form-group"><label>Emergency Contact</label><input type="tel" id="emergencyContact"></div> <div class="form-group"><label>Address</label><textarea id="patientAddress"></textarea></div> <div class="form-group"><label>Insurance Provider</label><select id="insurance"><option value="">-- Select Provider --</option></select></div> <div class="form-group"><label>Chief Complaint</label><textarea id="chiefComplaint"></textarea></div> <div class="form-group"><label>Diagnosis</label><textarea id="diagnosis"></textarea></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Patient</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addPatientModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addVitalsModal"> <div class="modal-content"> <div class="modal-header"><h2>Record Vital Signs</h2><button class="close-btn" onclick="closeModal('addVitalsModal')">×</button></div> <form id="vitalsForm" onsubmit="addVitalSign(event)"> <div class="form-grid"> <div class="form-group"><label>Date & Time *</label><input type="datetime-local" id="vitalDateTime" required></div> <div class="form-group"><label>Height (m)</label><input type="number" step="0.01" id="vitalHeight" placeholder="e.g. 1.75" oninput="calculateBMI()"></div> <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="vitalWeight" placeholder="e.g. 70.5" oninput="calculateBMI()"></div> <div class="form-group"><label>BMI</label><input type="text" id="vitalBMI" readonly></div> <div class="form-group"><label>Blood Pressure (e.g., 120/80)</label><input type="text" id="vitalBP" pattern="[0-9]{1,3}/[0-9]{1,3}" placeholder="e.g. 120/80" oninput="validateVitalInput(this)"></div> <div class="form-group"><label>Heart Rate (bpm)</label><input type="number" id="vitalHR" placeholder="e.g. 70" oninput="validateVitalInput(this)"></div> <div class="form-group"><label>Oxygen Saturation (SpO2 %)</label><input type="number" id="vitalO2" placeholder="e.g. 98" oninput="validateVitalInput(this)"></div> <div class="form-group"><label>Temperature (°C)</label><input type="text" id="vitalTemp" placeholder="e.g. 37.0" oninput="validateVitalInput(this)"></div> <div class="form-group"><label>Respiratory Rate</label><input type="number" id="vitalRR" placeholder="e.g. 16" oninput="validateVitalInput(this)"></div> <div class="form-group"><label>IV Fluid</label><input type="text" id="vitalIV"></div> <div class="form-group"><label>Intake (mL)</label><input type="number" id="vitalIntake"></div> <div class="form-group"><label>Output (mL)</label><input type="number" id="vitalOutput"></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Vitals</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addVitalsModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addMedicalHistoryModal"> <div class="modal-content"> <div class="modal-header"><h2>Add Medical History Record</h2><button class="close-btn" onclick="closeModal('addMedicalHistoryModal')">×</button></div> <form id="medicalHistoryForm" onsubmit="saveMedicalHistory(event)"> <div class="form-grid"> <div class="form-group"><label>Allergies</label><textarea id="mhAllergies"></textarea></div> <div class="form-group"><label>Past Medical Conditions</label><textarea id="mhPastConditions"></textarea></div> <div class="form-group"><label>Past Surgeries</label><textarea id="mhPastSurgeries"></textarea></div> <div class="form-group"><label>Current Medications</label><textarea id="mhCurrentMedications"></textarea></div> <div class="form-group"><label>Vaccines Received</label><textarea id="mhVaccines"></textarea></div> <div class="form-group"><label>Family History</label><textarea id="mhFamilyHistory"></textarea></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Record</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addMedicalHistoryModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addDoctorOrderModal"> <div class="modal-content"> <div class="modal-header"><h2>Add Medication Order</h2><button class="close-btn" onclick="closeModal('addDoctorOrderModal')">×</button></div> <form id="doctorOrderForm" onsubmit="saveDoctorOrder(event)"> <div class="form-grid"> <div class="form-group"><label>Date *</label><input type="date" id="doDate" required></div> <div class="form-group"><label>Attending Physician *</label><select id="doDoctorName" required><option value="">-- Select Physician --</option></select></div> <div class="form-group"><label>Status</label><select id="doStatus" disabled><option value="Pending">Pending</option></select></div> <div class="form-group"><label>Drug Name *</label><input type="text" id="doDrugName" required></div> <div class="form-group"><label>Dosage *</label><input type="text" id="doDosage" required placeholder="e.g., 500mg"></div> <div class="form-group"><label>Route *</label><input type="text" id="doRoute" required placeholder="e.g., PO, IV"></div> <div class="form-group"><label>Frequency *</label><input type="text" id="doFrequency" required placeholder="e.g., q6hr, BID"></div> <div class="form-group"><label>Time (Optional)</label><input type="time" id="doTime"></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Additional Notes (Optional)</label><textarea id="doNotes"></textarea></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Order & Add Medication</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addDoctorOrderModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addNurseNoteModal"> <div class="modal-content"> <div class="modal-header"><h2>Add Nurse's Note</h2><button class="close-btn" onclick="closeModal('addNurseNoteModal')">×</button></div> <form id="nurseNoteForm" onsubmit="saveNurseNote(event)"> <div class="form-grid"> <div class="form-group"><label>Date *</label><input type="date" id="nnDate" required></div> <div class="form-group"><label>Nurse Name *</label><select id="nnNurseName" required><option value="">-- Select Nurse --</option></select></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Goals / Expected Outcomes</label><textarea id="nnGoals"></textarea></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Interventions *</label><textarea id="nnInterventions" required></textarea></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Evaluation</label><textarea id="nnEvaluation"></textarea></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Note</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addNurseNoteModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addLabRecordModal"> <div class="modal-content"> <div class="modal-header"><h2>Request Laboratory Test</h2><button class="close-btn" onclick="closeModal('addLabRecordModal')">×</button></div> <form id="labRecordForm" onsubmit="saveLabRecord(event)"> <div class="form-grid"> <div class="form-group"><label>Category *</label><select id="labTestCategory" required onchange="populateLabTests()"><option value="">-- Select Category --</option></select></div> <div class="form-group"><label>Test Type *</label><select id="labTestType" required><option value="">-- Select Test --</option></select></div> <div class="form-group"><label>Date Requested *</label><input type="date" id="labDateRequested" required></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Notes (e.g., STAT)</label><textarea id="labNotes"></textarea></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Submit Lab Request</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addLabRecordModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="updateLabResultModal"> <div class="modal-content"> <div class="modal-header"><h2>Update Lab Result</h2><button class="close-btn" onclick="closeModal('updateLabResultModal')">×</button></div> <form id="labResultForm" onsubmit="saveLabResult(event)"> <input type="hidden" id="labResultId"> <div class="form-grid"> <div class="form-group"><label>Test Type</label><input type="text" id="labResultTestType" readonly></div> <div class="form-group"><label>Date Requested</label><input type="text" id="labResultDateRequested" readonly></div> <div class="form-group"><label>Date Completed *</label><input type="date" id="labResultDateCompleted" required></div> <div class="form-group"><label>Interpreted By</label><input type="text" id="labResultInterpretedBy" ></div> <div class="form-group" style="grid-column: 1 / -1;"><label>Results *</label><textarea id="labResultResults" required></textarea></div> <div class="form-group file-upload-area" style="grid-column: 1 / -1;"> <label for="labResultFile">Upload Result File (Optional - JPG, PNG)</label> <input type="file" id="labResultFile" accept=".pdf,.jpg,.jpeg,.png" onchange="previewFile()"> <img id="file-preview" src="#" alt="File Preview"/> <div id="upload-status"></div> <input type="hidden" id="labResultFileUrl"> <input type="hidden" id="labResultFileName"> </div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Result</button> <button type="button" class="btn btn-secondary" onclick="closeModal('updateLabResultModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addMedicationModal"> <div class="modal-content" style="max-width: 1100px;"> <div class="modal-header"><h2>Add Medication</h2><button class="close-btn" onclick="closeModal('addMedicationModal')">×</button></div> <form id="medicationForm" onsubmit="saveMedication(event)"> <h4 class="section-title" style="font-size: 16px; margin-bottom: 15px;">Medication Details</h4> <div class="form-grid"> <div class="form-group"><label>Drug Name *</label><input type="text" id="medDrugName" required></div> <div class="form-group"><label>Dosage * (e.g., 250mg)</label><input type="text" id="medDosage" required placeholder="e.g., 500mg" oninput="document.getElementById('medDesiredDose').value = this.value; calculateMedicationRates();"></div> <div class="form-group"><label>Route *</label><input type="text" id="medRoute" required></div> <div class="form-group"><label>Frequency *</label><input type="text" id="medFrequency" required></div> <div class="form-group"><label>Time (Optional)</label><input type="time" id="medTime"></div> <div class="form-group"><label>Start Date *</label><input type="date" id="medStartDate" required></div> <div class="form-group"><label>End Date (Optional)</label><input type="date" id="medEndDate"></div> </div> <h4 class="section-title" style="font-size: 16px; margin-top: 30px; margin-bottom: 15px;">IV / Drug Calculation Inputs</h4> <div class="form-grid"> <div class="form-group"><label>Total IV Volume (mL)</label><input type="number" step="any" id="medTotalVolume" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Infusion Time</label><input type="number" step="any" id="medInfusionTimeValue" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Time Unit</label><select id="medInfusionTimeUnit" onchange="calculateMedicationRates()"><option value="hours">Hours</option><option value="minutes">Minutes</option></select></div> <div class="form-group"><label>Drop Factor (gtts/mL)</label><input type="number" step="any" id="medDropFactor" placeholder="e.g., 15" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Drug Amount (for Dosage Rate)</label><input type="number" step="any" id="medDrugAmount" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Drug Unit</label><select id="medDrugUnit" onchange="calculateMedicationRates()"><option value="mg">mg</option><option value="mcg">mcg</option></select></div> <div class="form-group"><label>In Solution Volume (mL)</label><input type="number" step="any" id="medSolutionVolume" placeholder="e.g., 100" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Stock Strength (e.g., 500mg/2mL or 250mg)</label><input type="text" id="medStockStrength" placeholder="e.g. 500mg/2mL or 250mg" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Stock Volume (if in strength, e.g., 2 for /2mL)</label><input type="number" step="any" id="medStockVolume" placeholder="e.g., 2" oninput="calculateMedicationRates()"></div> <div class="form-group"><label>Desired Dose (auto-fills from Dosage)</label><input type="text" id="medDesiredDose" placeholder="e.g. 250mg" oninput="calculateMedicationRates()"></div> </div> <div class="calculation-section"> <h4>Calculated Rates & Dosages</h4> <div class="calculation-result"><label>Flow Rate (mL/hr):</label><span id="calcFlowRateMlHr">--</span><small class="calculation-formula" id="formulaFlowRateMlHr"></small></div> <div class="calculation-result"><label>Flow Rate (gtts/min):</label><span id="calcFlowRateGttsMin">--</span><small class="calculation-formula" id="formulaFlowRateGttsMin"></small></div> <div class="calculation-result"><label>Dosage Rate:</label><span id="calcDosageRate">--</span><small class="calculation-formula" id="formulaDosageRate"></small></div> <hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border-color-light);"> <div class="calculation-result"><label>Amount to Give:</label><span id="calcAmountToGive">--</span><small class="calculation-formula" id="formulaAmountToGive"></small></div> <div class="calculation-result"><label>Number of Tablets:</label><span id="calcNumTablets">--</span><small class="calculation-formula" id="formulaNumTablets"></small></div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Save Medication</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addMedicationModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="listModal"> <div class="modal-content" style="max-width: 700px;"> <div class="modal-header"> <h2 id="listModalTitle">List</h2> <button class="close-btn" onclick="closeModal('listModal')">×</button> </div> <div id="listModalContent" style="max-height: 60vh; overflow-y: auto;"> <div class="empty-state">Loading list...</div> </div> <div class="btn-group" style="justify-content: flex-end;"> <button type="button" class="btn btn-secondary" onclick="closeModal('listModal')">Close</button> </div> </div> </div>
+    <div class="modal" id="addBillingItemModal"> <div class="modal-content"> <div class="modal-header"> <h2>Add Billing Item</h2> <button class="close-btn" onclick="closeModal('addBillingItemModal')">×</button> </div> <form id="billingItemForm" onsubmit="saveBillingItem(event)"> <div class="form-grid"> <div class="form-group"> <label>Date of Service *</label> <input type="date" id="billingItemDate" required> </div> <div class="form-group"> <label>Description *</label> <input type="text" id="billingItemDescription" required placeholder="e.g., Consultation, Lab Test"> </div> <div class="form-group"> <label>Service Code</label> <input type="text" id="billingItemCode" placeholder="e.g., CPT-99213"> </div> <div class="form-group"> <label>Quantity *</label> <input type="number" id="billingItemQuantity" required min="1" value="1"> </div> <div class="form-group"> <label>Unit Price *</label> <input type="number" id="billingItemUnitPrice" required step="0.01" min="0"> </div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Add Item</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addBillingItemModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addPaymentModal"> <div class="modal-content"> <div class="modal-header"> <h2>Add Payment Record</h2> <button class="close-btn" onclick="closeModal('addPaymentModal')">×</button> </div> <form id="paymentForm" onsubmit="savePayment(event)"> <div class="form-grid"> <div class="form-group"> <label>Payment Date *</label> <input type="date" id="paymentDate" required> </div> <div class="form-group"> <label>Payment Method *</label> <select id="paymentMethod" required> <option value="">-- Select Method --</option> <option value="Cash">Cash</option> <option value="Credit Card">Credit Card</option> <option value="Debit Card">Debit Card</option> <option value="Bank Transfer">Bank Transfer</option> <option value="Check">Check</option> <option value="Insurance">Insurance</option> </select> </div> <div class="form-group"> <label>Amount Paid *</label> <input type="number" id="paymentAmount" required step="0.01" min="0"> </div> <div class="form-group"> <label>Reference Number</label> <input type="text" id="paymentReference" placeholder="Transaction/Check number"> </div> <div class="form-group" style="grid-column: 1 / -1;"> <label>Notes</label> <textarea id="paymentNotes" placeholder="Additional payment details"></textarea> </div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Record Payment</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addPaymentModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="addClaimModal"> <div class="modal-content"> <div class="modal-header"> <h2>Add Insurance Claim</h2> <button class="close-btn" onclick="closeModal('addClaimModal')">×</button> </div> <form id="claimForm" onsubmit="saveClaim(event)"> <div class="form-grid"> <div class="form-group"> <label>Claim Number *</label> <input type="text" id="claimNumber" required placeholder="e.g., CLM-2024-001"> </div> <div class="form-group"> <label>Date Filed *</label> <input type="date" id="claimDateFiled" required> </div> <div class="form-group"> <label>Status *</label> <select id="claimStatus" required> <option value="">-- Select Status --</option> <option value="Submitted">Submitted</option> <option value="Under Review">Under Review</option> <option value="Approved">Approved</option> <option value="Denied">Denied</option> <option value="Pending">Pending</option> </select> </div> <div class="form-group"> <label>EOB Received</label> <select id="claimEOB"> <option value="">-- Select --</option> <option value="Yes">Yes</option> <option value="No">No</option> <option value="Pending">Pending</option> </select> </div> <div class="form-group" style="grid-column: 1 / -1;"> <label>Claim Amount</label> <input type="number" id="claimAmount" step="0.01" min="0" placeholder="Total claim amount"> </div> <div class="form-group" style="grid-column: 1 / -1;"> <label>Notes</label> <textarea id="claimNotes" placeholder="Additional claim information"></textarea> </div> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Add Claim</button> <button type="button" class="btn btn-secondary" onclick="closeModal('addClaimModal')">Cancel</button> </div> </form> </div> </div>
+    <div class="modal" id="updateClaimStatusModal"> <div class="modal-content" style="max-width: 500px;"> <div class="modal-header"> <h2>Update Claim Status</h2> <button class="close-btn" onclick="closeModal('updateClaimStatusModal')">×</button> </div> <form id="updateClaimStatusForm" onsubmit="saveClaimStatus(event)"> <input type="hidden" id="updateClaimId"> <div class="form-group"> <label>Claim Number:</label> <input type="text" id="updateClaimNumberDisplay" readonly style="background-color: #eee;"> </div> <div class="form-group"> <label for="updateClaimStatusSelect">New Status *</label> <select id="updateClaimStatusSelect" required> <option value="">-- Select Status --</option> <option value="Submitted">Submitted</option> <option value="Under Review">Under Review</option> <option value="Approved">Approved</option> <option value="Denied">Denied</option> <option value="Pending">Pending</option> </select> </div> <div class="form-group"> <label>EOB Received Update</label> <select id="updateClaimEOBSelect"> <option value="">-- No Change --</option> <option value="Yes">Yes</option> <option value="No">No</option> <option value="Pending">Pending</option> </select> </div> <div class="btn-group"> <button type="submit" class="btn btn-primary">Update Status</button> <button type="button" class="btn btn-secondary" onclick="closeModal('updateClaimStatusModal')">Cancel</button> </div> </form> </div> </div>
+
+    <div class="footer-watermark"> By BSN-4C: GROUP 4 </div>
+
+    <script>
+        // --- Configuration & Global Variables ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyUEtIvzZ6eFvL4jDoq1ozAMLaFs_hW7_D3ZCDWgFow6hN6UaydrNwOrdIsY_yuMO9/exec"; // <<< PASTE YOUR DEPLOYED URL HERE
+        const CLOUDINARY_CLOUD_NAME = "dhkhm33ud"; // <-- REPLACE THIS
+        const CLOUDINARY_UPLOAD_PRESET = "dkdkdkd"; // <-- REPLACE THIS
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+
+        let patients = [], medicalHistory = [], doctorOrders = [], nurseNotes = [];
+        let laboratoryRecords = [], vitalSigns = [], medications = [];
+        let billingItems = [], payments = [], claims = [], auditLogs = [];
+        let dischargePlans = [];
+        let currentPatient = null, currentUser = null, vitalSignsChartInstance = null;
+        
+        const servicePriceList = {
+            "Blood glucose test": 300,
+            "Complete blood count (CBC)": 750,
+            "Urinalysis (physical, chemical, microscopic)": 250,
+            "Liver function test (ALT, AST, ALP, bilirubin)": 800,
+            "Kidney function test (BUN, creatinine)": 600,
+            "DEFAULT_LAB": 400,
+            "Doctor's Order": 1500,
+            "Nurse's Note": 500,
+            "Vitals Check": 300
+        };
+        const users = {
+            Doctor: { "AP 1": "doc1pass", "AP 2": "doc2pass", "AP 3": "doc3pass", "AP 4": "doc4pass", "AP 5": "doc5pass", "AP 6": "doc6pass" },
+            Nurse: { "RN 1": "nurse1pass", "RN 2": "nurse2pass", "RN 3": "nurse3pass", "RN 4": "nurse4pass", "RN 5": "nurse5pass", "RN 6": "nurse6pass" },
+            MEDTECH: { "MT 1": "mt1pass", "MT 2": "mt2pass" },
+            RADTECH: { "RT 1": "rt1pass", "RT 2": "rt2pass" }
+        };
+        const doctorNames = ["AP 1", "AP 2", "AP 3", "AP 4", "AP 5", "AP 6"];
+        const nurseNames = ["RN 1", "RN 2", "RN 3", "RN 4", "RN 5", "RN 6"];
+        const medTechNames = ["MT 1", "MT 2"];
+        const radTechNames = ["RT 1", "RT 2"];
+        const religions = ["Roman Catholic", "Islam", "Iglesia ni Cristo", "Evangelical", "Born Again Christian", "Other Christian", "Buddhist", "Agnostic", "Atheist", "Other", "Prefer not to say"];
+        const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
+        const insuranceProviders = ["PhilHealth", "Maxicare Healthcare Corporation", "Intellicare (Asalus Corporation)", "Medicard Philippines Inc.", "Avega Managed Care Inc.", "PhilCare (Philhealth Care Inc.)", "Generali Life Assurance Philippines Inc.", "Kaiser International Healthgroup Inc.", "AsianLife & General Assurance Corporation", "CareHealth Plus Systems International Inc.", "Value Care Health Systems (ValuCare)", "Cocolife Healthcare", "Insular Health Care Inc.", "Pacific Cross Health Care Inc. (formerly Blue Cross)", "HPPI - Healthway Premium Provider Inc.", "Fortune Care Health Systems Inc.", "Sun Life of Canada (Philippines) Inc.", "Pru Life UK", "AXA Philippines", "BPI AIA (formerly BPI-Philam Life Assurance)", "Manulife Philippines", "Allianz PNB Life", "FWD Life Insurance Corporation", "Cocolife Insurance", "Etiqa Life and General Assurance Philippines", "Pioneer Life Inc.", "Other", "None"];
+        const labTestData = { "Clinical Chemistry": ["Blood glucose test", "Electrolyte test (Na, K, CI)", "Liver function test (ALT, AST, ALP, bilirubin)", "Kidney function test (BUN, creatinine)", "Lipid profile (cholesterol, triglycerides, HDL, LDL)", "Serum uric acid", "Total protein and albumin", "Enzyme assays (amylase, lipase)"], "Hematology": ["Complete blood count (CBC)", "Hemoglobin and hematocrit", "Platelet count", "White blood cell differential count", "Erythrocyte sedimentation rate (ESR)", "Coagulation tests (PT, aPTT, INR)", "Reticulocyte count", "Peripheral blood smear"], "Microbiology": ["Gram stain", "Acid-fast bacilli (AFB) stain", "Culture and sensitivity test (urine, sputum, wound, blood, stool)", "Blood culture", "Stool culture", "Throat culture", "KOH test (for fungi)", "Fecalysis for parasites", "Sputum microscopy"], "Serology / Immunology": ["HIV antibody test", "Hepatitis B surface antigen (HBsAg) test", "Dengue NS1, IgG, IgM tests", "Typhoid test (Widal)", "Syphilis test (VDRL/RPR)", "COVID-19 antibody/antigen test", "Pregnancy test (hCG)", "Rheumatoid factor test", "C-reactive protein (CRP) test"], "Blood Bank / Immunohematology": ["Blood typing (ABO and Rh)", "Crossmatching", "Antibody screening", "Direct and indirect Coombs test", "Blood component preparation (PRBC, FFP, platelets)", "Compatibility testing"], "Clinical Microscopy": ["Urinalysis (physical, chemical, microscopic)", "Fecalysis", "Pregnancy test (urine)", "Semen analysis", "Body fluid analysis (CSF, pleural, ascitic)"], "Pathology / Histopathology": ["Biopsy processing and examination", "Pap smear (cytology)", "Frozen section", "Fine needle aspiration biopsy (FNAB)", "Tissue staining (H&E, special stains)"], "Others": ["Polymerase chain reaction (PCR) test", "DNA/RNA extraction", "Genetic testing (karyotyping, FISH)", "Hormone assays (TSH, T3, T4, cortisol, insulin)", "Tumor marker testing (CEA, AFP, CA-125)", "Drug screening (toxicology)", "Alcohol level determination", "Heavy metal testing", "Forensic DNA testing"] };
+        
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            populateDropdown('patientReligion', religions, "-- Select Religion --");
+            populateDropdown('patientBloodType', bloodTypes, "-- Select Blood Type --");
+            populateDropdown('insurance', insuranceProviders, "-- Select Provider --");
+            populateDropdown('billingInsuranceProvider', insuranceProviders, "-- Select Provider --");
+            populateLabCategories();
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserInfoDisplay();
+                applyGlobalRoleRestrictions();
+                await loadAllDataFromServer();
+            } else {
+                document.getElementById('loginModal').classList.add('show');
+            }
+            if (localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); }
+        });
+
+        // --- Local Storage Fallback ---
+        function loadDataFromLocalStorage() {
+            patients = JSON.parse(localStorage.getItem('patients') || '[]');
+            medicalHistory = JSON.parse(localStorage.getItem('medicalHistory') || '[]');
+            doctorOrders = JSON.parse(localStorage.getItem('doctorOrders') || '[]');
+            nurseNotes = JSON.parse(localStorage.getItem('nurseNotes') || '[]');
+            laboratoryRecords = JSON.parse(localStorage.getItem('laboratoryRecords') || '[]');
+            vitalSigns = JSON.parse(localStorage.getItem('vitalSigns') || '[]');
+            medications = JSON.parse(localStorage.getItem('medications') || '[]');
+            renderPatientsGrid();
+            updateDashboard();
+            setupBillingPage();
+            setupDischargePage();
+        }
+
+        // --- Login/Logout & User Info ---
+        function populateLoginNames() { const role = document.getElementById('loginRole').value; const nameSelect = document.getElementById('loginName'); nameSelect.innerHTML = '<option value="">-- Select Name --</option>'; let names = []; if (role === 'Doctor') names = doctorNames; else if (role === 'Nurse') names = nurseNames; else if (role === 'MEDTECH') names = medTechNames; else if (role === 'RADTECH') names = radTechNames; names.forEach(name => { const option = document.createElement('option'); option.value = name; option.textContent = name; nameSelect.appendChild(option); }); }
+        async function handleLogin(event) { event.preventDefault(); const role = document.getElementById('loginRole').value; const name = document.getElementById('loginName').value; const password = document.getElementById('loginPassword').value; const errorDiv = document.getElementById('loginError'); if (users[role] && users[role][name] && users[role][name] === password) { currentUser = { name: name, role: role }; localStorage.setItem('currentUser', JSON.stringify(currentUser)); errorDiv.style.display = 'none'; closeModal('loginModal'); updateUserInfoDisplay(); applyGlobalRoleRestrictions(); await loadAllDataFromServer(); } else { errorDiv.style.display = 'block'; } }
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateUserInfoDisplay();
+                alert('Logged out successfully!');
+                const patientsGrid = document.getElementById('patientsGrid');
+                if (patientsGrid) {
+                    patientsGrid.innerHTML = '';
+                }
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const dashboardPage = document.getElementById('dashboard');
+                if (dashboardPage) {
+                    dashboardPage.classList.add('active');
+                } else {
+                    console.error("Logout Error: Cannot find element with ID 'dashboard'");
+                }
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) {
+                    loginModal.classList.add('show');
+                } else {
+                    console.error("Logout Error: Cannot find element with ID 'loginModal'");
+                }
+                applyGlobalRoleRestrictions();
+            }
+        }
+        function updateUserInfoDisplay() { const display = document.getElementById('userInfoDisplay'); const initialBtn = document.getElementById('userInitialBtn'); if (currentUser) { display.textContent = `${currentUser.name} (${currentUser.role})`; display.style.display = 'inline'; initialBtn.textContent = currentUser.name.charAt(0).toUpperCase(); } else { display.style.display = 'none'; initialBtn.textContent = '?'; } }
+
+        // --- Role Permissions ---
+        function applyGlobalRoleRestrictions() { const isTech = currentUser && (currentUser.role === 'MEDTECH' || currentUser.role === 'RADTECH'); document.querySelectorAll('.nav-btn').forEach(btn => { const page = btn.getAttribute('onclick').match(/'([^']+)'/)[1]; let show = true; if (isTech && !['dashboard', 'patients'].includes(page)) { show = false; } btn.style.display = show ? 'inline-block' : 'none'; }); const activeNavBtn = document.querySelector('.nav-btn.active'); if (activeNavBtn && activeNavBtn.style.display === 'none') { showPage('dashboard'); } }
+        function applyProfileRolePermissions() {
+             if (!currentUser) return;
+             const isDr = currentUser.role === 'Doctor';
+             const isN = currentUser.role === 'Nurse';
+             const isT = currentUser.role === 'MEDTECH' || currentUser.role === 'RADTECH';
+             document.getElementById('addOrderBtn').style.display = isDr ? 'inline-block' : 'none';
+             document.getElementById('addNoteBtn').style.display = isN ? 'inline-block' : 'none';
+             document.getElementById('addLabBtn').style.display = (isDr || isN) ? 'inline-block' : 'none';
+             const uploadBtn = document.getElementById('uploadLabBtn');
+             if (uploadBtn) {
+                 uploadBtn.style.display = isT ? 'inline-block' : 'none';
+             }
+             document.querySelectorAll('.profile-tab').forEach(t => { const tn = t.getAttribute('onclick').match(/'([^']+)'/)[1]; if (isT && !['overview', 'laboratory'].includes(tn)) { t.style.display = 'none'; } else { t.style.display = 'inline-block'; } });
+             const editBtn = document.querySelector('#patientProfile .btn-primary[onclick="editPatientInfo()"]'); if(editBtn) editBtn.style.display = (isDr || isN) ? 'inline-block' : 'none';
+             const medHistBtn = document.querySelector('#medical-history button.btn-primary'); if(medHistBtn) medHistBtn.style.display = (isDr || isN) ? 'inline-block' : 'none';
+             const vitalsBtn = document.querySelector('#vital-signs button.btn-primary'); if(vitalsBtn) vitalsBtn.style.display = (isDr || isN) ? 'inline-block' : 'none';
+             const medsBtn = document.querySelector('#medications button.btn-primary'); if(medsBtn) medsBtn.style.display = (isDr || isN) ? 'inline-block' : 'none';
+             if(isT && document.getElementById('patientProfile').classList.contains('active')) { const labTabBtn = document.querySelector('.profile-tab[onclick*="showTab(\'laboratory\'"]'); if(labTabBtn && labTabBtn.style.display !== 'none') { labTabBtn.click(); } else { document.querySelector('.profile-tab[onclick*="showTab(\'overview\'"]').click(); } }
+         }
+
+        // --- Data Loading & Posting ---
+        async function loadAllDataFromServer() {
+            if (!currentUser) return;
+            const sheetsToLoad = [ 'Patients', 'MedicalHistory', 'DoctorsOrders', 'NursesNotes', 'Laboratory', 'VitalSigns', 'Medications', 'BillingItems', 'Payments', 'Claims', 'AuditLogs', 'DischargePlans' ];
+            console.log("Starting data load...");
+            document.getElementById('patientsGrid').innerHTML = '<div class="empty-state">Loading...</div>';
+            try {
+                for (const sheetName of sheetsToLoad) {
+                    const response = await fetch(`${SCRIPT_URL}?sheet=${sheetName}`);
+                    if (!response.ok) throw new Error(`Fetch ${sheetName} failed`);
+                    const data = await response.json();
+                    if(data.status === 'error') throw new Error(`Sheet Error (${sheetName}): ${data.message}`);
+                    switch (sheetName) {
+                        case 'Patients': patients = data; break;
+                        case 'MedicalHistory': medicalHistory = data; break;
+                        case 'DoctorsOrders': doctorOrders = data; break;
+                        case 'NursesNotes': nurseNotes = data; break;
+                        case 'Laboratory': laboratoryRecords = data; break;
+                        case 'VitalSigns': vitalSigns = data; break;
+                        case 'Medications': medications = data; break;
+                        case 'BillingItems': billingItems = data; break;
+                        case 'Payments': payments = data; break;
+                        case 'Claims': claims = data; break;
+                        case 'AuditLogs': auditLogs = data; break;
+                        case 'DischargePlans': dischargePlans = data; break;
+                    }
+                }
+                console.log("Data loaded.");
+                renderPatientsGrid();
+                updateDashboard();
+                setupBillingPage();
+                setupDischargePage();
+            } catch (error) {
+                console.error("Load failed:", error);
+                document.getElementById('patientsGrid').innerHTML = `<div class="empty-state">Error loading data.</div>`;
+            }
+        }
+        async function postData(payload) { try { const response = await fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`Network error`); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message || 'Server error'); return result; } catch (error) { console.error('Backend error:', error); return null; } }
+
+        // --- UI Navigation ---
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const pageEl = document.getElementById(pageName);
+            if (pageEl) {
+                pageEl.classList.add('active');
+            } else {
+                console.error(`showPage Error: Cannot find page with ID '${pageName}'. Defaulting to dashboard.`);
+                const dashboardPage = document.getElementById('dashboard');
+                if(dashboardPage) dashboardPage.classList.add('active');
+            }
+            const navBtn = document.querySelector(`.nav-btn[onclick="showPage('${pageName}')"]`);
+            if (navBtn) {
+                navBtn.classList.add('active');
+            }
+            applyGlobalRoleRestrictions();
+            if (pageName === 'billingRecords') { setupBillingPage(); }
+            if (pageName === 'dischargePlan') { setupDischargePage(); }
+        }
+        function showTab(tabName, element) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active')); document.getElementById(tabName).classList.add('active'); element.classList.add('active'); }
+        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('show'); }
+        document.addEventListener('click', e => { if (!e.target.closest('.dropdown')) document.getElementById('userMenu').classList.remove('show'); });
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); localStorage.setItem('darkMode', document.body.classList.contains('dark-mode')); }
+        function toggleSearch() { document.getElementById('searchModal').classList.toggle('show'); if (document.getElementById('searchModal').classList.contains('show')) document.getElementById('searchInput').focus(); }
+        function closeSearch(event) { if (event.target.id === 'searchModal') document.getElementById('searchModal').classList.remove('show'); }
+        function performSearch() { const q=document.getElementById('searchInput').value.toLowerCase(); const r=(patients||[]).filter(p=>(p.name&&p.name.toLowerCase().includes(q))||(p.id&&p.id.toLowerCase().includes(q))); const rd=document.getElementById('searchResults'); if(q===''){rd.innerHTML='';return;} rd.innerHTML=r.length===0?'<div class="empty-state">Not found</div>':r.map(p=>`<div class="search-result-item" onclick="viewPatientProfile('${p.id}')"><strong>${p.name}</strong><div style="font-size:14px;color:#6c757d;margin-top:5px;">${p.id} • ${p.age}y • ${p.sex}</div></div>`).join(''); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
+        function calculateAge() { try{const d=new Date(document.getElementById('patientDOB').value);let a=new Date().getFullYear()-d.getFullYear();const m=new Date().getMonth()-d.getMonth();if(m<0||(m===0&&new Date().getDate()<d.getDate()))a--;document.getElementById('patientAge').value=a>=0?a:0;}catch(e){document.getElementById('patientAge').value='';}}
+        function editPatientInfo() { alert('Edit patient - Soon!'); }
+
+        // --- Dashboard Update ---
+        function updateDashboard() {
+            const totalPatientsEl = document.getElementById('totalPatients');
+            if (totalPatientsEl) { totalPatientsEl.textContent = (patients || []).length; }
+            else { console.error("Dashboard Error: Cannot find element with ID 'totalPatients'"); }
+            const totalOrdersEl = document.getElementById('totalOrders');
+            if (totalOrdersEl) { totalOrdersEl.textContent = (doctorOrders || []).filter(o => o.status !== 'Completed').length; }
+            else { console.error("Dashboard Error: Cannot find element with ID 'totalOrders'"); }
+            const labRequestsCountEl = document.getElementById('labRequestsCount');
+            if (labRequestsCountEl) { labRequestsCountEl.textContent = (laboratoryRecords || []).filter(l => l.status !== 'Completed').length; }
+            else { console.error("Dashboard Error: Cannot find element with ID 'labRequestsCount'"); }
+            const totalMedicationsEl = document.getElementById('totalMedications');
+            if (totalMedicationsEl) { totalMedicationsEl.textContent = (medications || []).length; }
+            else { console.error("Dashboard Error: Cannot find element with ID 'totalMedications'"); }
+        }
+
+        // --- Patient CRUD & Display ---
+        function openAddPatientModal() { document.getElementById('patientForm').reset(); document.getElementById('addPatientModal').classList.add('show'); }
+        async function savePatient(e) { e.preventDefault(); let mId=(patients||[]).reduce((m,p)=>Math.max(m,parseInt((p.id||'P0').replace('P',''),10)),0); const p={id:'P'+String(mId+1).padStart(4,'0'),name:document.getElementById('patientName').value,dob:document.getElementById('patientDOB').value,age:document.getElementById('patientAge').value,sex:document.getElementById('patientSex').value, religion:document.getElementById('patientReligion').value, bloodType: document.getElementById('patientBloodType').value, admissionDate:document.getElementById('admissionDate').value,guardian:document.getElementById('guardian').value,emergencyContact:document.getElementById('emergencyContact').value,address:document.getElementById('patientAddress').value,insurance:document.getElementById('insurance').value,chiefComplaint:document.getElementById('chiefComplaint').value,diagnosis:document.getElementById('diagnosis').value}; const res=await postData({sheet:'Patients',action:'add',data:p}); if(res){patients.push(p);renderPatientsGrid();updateDashboard();closeModal('addPatientModal');alert('Saved.');} }
+        async function deletePatient(pId,e){e.stopPropagation();const ptd=patients.find(p=>p.id===pId);if(!ptd)return;if(!confirm(`Delete ${ptd.name}? CANNOT undo.`))return;const pl={action:'deletePatient',patientId:pId};const res=await postData(pl);if(res){patients=patients.filter(p=>p.id!==pId);medicalHistory=medicalHistory.filter(r=>r.patientId!==pId);doctorOrders=doctorOrders.filter(r=>r.patientId!==pId);nurseNotes=nurseNotes.filter(r=>r.patientId!==pId);laboratoryRecords=laboratoryRecords.filter(r=>r.patientId!==pId);vitalSigns=vitalSigns.filter(r=>r.patientId!==pId);medications=medications.filter(r=>r.patientId!==pId);billingItems=billingItems.filter(r=>r.patientId!==pId);payments=payments.filter(r=>r.patientId!==pId);claims=claims.filter(r=>r.patientId!==pId);auditLogs=auditLogs.filter(r=>r.patientId!==pId);dischargePlans=dischargePlans.filter(r=>r.patientId!==pId);renderPatientsGrid();updateDashboard();alert(`Deleted.`);}}
+        function renderPatientsGrid() { const g=document.getElementById('patientsGrid'); const vp=(patients||[]).filter(p=>p&&p.id&&p.name); if(vp.length===0){g.innerHTML='<div class="empty-state">No patients.</div>';return;} g.innerHTML=vp.map(p=>{ const vs=checkPatientVitals(p.id); const cc=vs.isAbnormal?'patient-card critical-vitals':'patient-card'; const ah=vs.isAbnormal?`<div class="vitals-alert">❗ ${vs.message}</div>`:''; return ` <div class="${cc}" onclick="viewPatientProfile('${p.id}')"> <button class="delete-patient-btn" onclick="deletePatient('${p.id}', event)">×</button> <div class="patient-header"> <div class="patient-avatar">${String(p.name||'?').charAt(0).toUpperCase()}</div> <div class="patient-info"><h3>${p.name}</h3><div class="patient-id">${p.id}</div></div> </div> <div class="patient-details"> <div class="detail-row"><span class="detail-label">Age:</span><span>${p.age||'N/A'} y</span></div> <div class="detail-row"><span class="detail-label">Sex:</span><span>${p.sex||'N/A'}</span></div> <div class="detail-row"><span class="detail-label">Complaint:</span><span>${p.chiefComplaint||'None'}</span></div> </div> ${ah} </div>`; }).join(''); }
+        function viewPatientProfile(pId) { const p=patients.find(pt=>pt.id===pId); if(!p)return; currentPatient=p; document.getElementById('searchModal').classList.remove('show'); document.getElementById('profileAvatar').textContent=String(p.name||'?').charAt(0).toUpperCase(); document.getElementById('profileName').textContent=p.name; document.getElementById('profileId').textContent=p.id; document.getElementById('profileDetails').textContent=`${p.age}y • ${p.sex} • ${p.dob}`; loadOverview(p); loadMedicalHistory(p.id); loadDoctorOrders(p.id); loadNurseNotes(p.id); loadLaboratory(p.id); loadVitalSigns(p.id); loadMedications(p.id); renderVitalSignsGraph(p.id); showPage('patientProfile'); showTab('overview',document.querySelector('.profile-tab')); applyProfileRolePermissions(); }
+
+        // --- Record Loading & Rendering ---
+        function loadOverview(p) { const f={"ID":p.id,"Name":p.name,"DOB":p.dob,"Age":`${p.age}y`,"Sex":p.sex,"Religion":p.religion,"Blood Type":p.bloodType,"Admission":p.admissionDate,"Guardian":p.guardian,"Emergency":p.emergencyContact,"Address":p.address,"Insurance":p.insurance,"Complaint":p.chiefComplaint,"Diagnosis":p.diagnosis}; document.getElementById('overviewContent').innerHTML=`<div class="form-grid">${Object.entries(f).map(([l,v])=>`<div class="form-group"><label>${l}</label><input type="text" value="${v||'N/A'}" readonly></div>`).join('')}</div>`; }
+        function loadMedicalHistory(pid) { renderRecords('medicalHistoryContent', medicalHistory.filter(m=>m.patientId===pid), r=>`<div class="record-card"><div class="record-header"><div class="record-title">Med History</div><div class="record-actions"><button class="action-btn delete" onclick="deleteRecord('MedicalHistory','${r.id}')">X</button></div></div><div class="record-grid">${Object.entries({"Allergies":r.allergies,"Past Cond":r.pastConditions,"Past Surg":r.pastSurgeries,"Meds":r.currentMedications,"Vaccines":r.vaccines,"Family Hx":r.familyHistory}).map(([l,v])=>`<div class="record-field"><label>${l}</label><span>${v||'None'}</span></div>`).join('')}</div></div>`); }
+        function loadDoctorOrders(pid) { renderRecords('doctorOrdersContent', doctorOrders.filter(o=>o.patientId===pid).sort((a,b) => new Date(b.date) - new Date(a.date)), o=>`<div class="record-card"><div class="record-header"><div class="record-title">${o.orderId}</div><div class="record-actions">${(o.status!=='Completed' && (currentUser.role==='Nurse' || currentUser.role==='Doctor')) ? `<button class="action-btn" style="background-color: #28a745; color: white;" onclick="completeOrder('${o.id}', '${o.patientId}', event)">Complete</button>` : ''}<button class="action-btn delete" onclick="deleteRecord('DoctorsOrders','${o.id}')">X</button></div></div><div class="record-grid"><div class="record-field"><label>Date</label><span>${o.date}</span></div><div class="record-field"><label>Physician</label><span>${o.doctorName}</span></div><div class="record-field"><label>Status</label><span class="status-badge ${o.status==='Completed'?'status-completed':o.status==='Pending'?'status-pending':'status-in-progress'}">${o.status}</span></div><div class="record-field" style="grid-column:1/-1;"><label>Details</label><span>${o.orderDetails}</span></div>${o.notes?`<div class="record-field" style="grid-column:1/-1;"><label>Notes</label><span>${o.notes}</span></div>`:''}</div></div>`); }
+        function loadNurseNotes(pid) { renderRecords('nurseNotesContent', nurseNotes.filter(n=>n.patientId===pid).sort((a,b) => new Date(b.date) - new Date(a.date)), n=>`<div class="record-card"><div class="record-header"><div class="record-title">Note ${n.date}</div><div class="record-actions"><button class="action-btn delete" onclick="deleteRecord('NursesNotes','${n.id}')">X</button></div></div><div class="record-grid"><div class="record-field"><label>Date</label><span>${n.date}</span></div><div class="record-field"><label>Nurse</label><span>${n.nurseName}</span></div><div class="record-field" style="grid-column:1/-1;"><label>Goals</label><span>${n.goals||'N/A'}</span></div><div class="record-field" style="grid-column:1/-1;"><label>Interventions</label><span>${n.interventions}</span></div><div class="record-field" style="grid-column:1/-1;"><label>Eval</label><span>${n.evaluation||'N/A'}</span></div></div></div>`); }
+        function loadLaboratory(pid) {
+            const isTech = currentUser && (currentUser.role === 'MEDTECH' || currentUser.role === 'RADTECH');
+            renderRecords('laboratoryContent',
+                laboratoryRecords.filter(l => l.patientId === pid).sort((a, b) => new Date(b.dateRequested) - new Date(a.dateRequested)),
+                l => `
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-title">${l.requestId}-${l.testType}</div>
+                        <div class="record-actions">
+                            ${(isTech && l.status !== 'Completed') ? `<button class="action-btn" style="background-color: #ffc107; color: #000;" onclick="openUpdateLabResultModal('${l.id}')">Update</button>` : ''}
+                            <button class="action-btn delete" onclick="deleteRecord('Laboratory','${l.id}')">X</button>
+                        </div>
+                    </div>
+                    <div class="record-grid">
+                        <div class="record-field"><label>Req ID</label><span>${l.requestId}</span></div>
+                        <div class="record-field"><label>Test</label><span>${l.testType}</span></div>
+                        <div class="record-field"><label>Req Date</label><span>${l.dateRequested || 'N/A'}</span></div>
+                        <div class="record-field"><label>Comp Date</label><span>${l.dateCompleted || 'N/A'}</span></div>
+                        <div class="record-field"><label>By</label><span>${l.interpretedBy || 'N/A'}</span></div>
+                        <div class="record-field"><label>Status</label><span class="status-badge ${l.status === 'Completed' ? 'status-completed' : 'status-pending'}">${l.status || 'Pending'}</span></div>
+                        <div class="record-field" style="grid-column:1/-1;"><label>Notes</label><span>${l.notes || 'N/A'}</span></div>
+                        <div class="record-field" style="grid-column:1/-1;"><label>Results</label><span>${l.results || 'N/A'}</span></div>
+                        ${l.resultFileUrl ? `
+                        <div class="record-field" style="grid-column:1/-1;">
+                            <label>Result File</label>
+                            <span><a href="${l.resultFileUrl}" target="_blank" rel="noopener noreferrer">${l.resultFileName || 'View File'}</a></span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `);
+        }
+        function loadVitalSigns(pid) { renderRecords('vitalSignsContent', vitalSigns.filter(v=>v.patientId===pid).sort((a,b) => new Date(b.dateTime) - new Date(a.dateTime)), v=>`<div class="record-card"><div class="record-header"><div class="record-title">Vitals ${v.dateTime}</div><div class="record-actions"><button class="action-btn delete" onclick="deleteRecord('VitalSigns','${v.id}')">X</button></div></div><div class="record-grid">${Object.entries({"BP":v.bloodPressure,"Temp":v.temperature,"HR":v.heartRate,"SpO2":v.oxygenSat,"RR":v.respiratoryRate,"H(m)":v.height,"W(kg)":v.weight,"BMI":v.bmi,"IV":v.ivFluid,"In":v.intake,"Out":v.output}).map(([l,vl])=>`<div class="record-field"><label>${l}</label><span>${vl||'N/A'}</span></div>`).join('')}</div></div>`); }
+        function loadMedications(pid) { renderRecords('medicationsContent', medications.filter(m=>m.patientId===pid).sort((a,b) => new Date(b.startDate) - new Date(a.startDate)), m=>`<div class="record-card"><div class="record-header"><div class="record-title">${m.drugName}</div><div class="record-actions"><button class="action-btn delete" onclick="deleteRecord('Medications','${m.id}')">X</button></div></div><div class="record-grid">${Object.entries({"Drug":m.drugName,"Dose":m.dosage,"Route":m.route,"Freq":m.frequency,"Time":m.time,"Start":m.startDate,"End":m.endDate}).map(([l,v])=>`<div class="record-field"><label>${l}</label><span>${v||'N/A'}</span></div>`).join('')}</div></div>`); }
+        function renderRecords(cid, recs, ren) { const c=document.getElementById(cid); if (!c) { console.error(`Render Error: Cannot find container with ID '${cid}'`); return; } c.innerHTML=(!recs||recs.length===0)?'<div class="empty-state">No records.</div>':recs.map(ren).join(''); }
+
+        // --- Record Deletion ---
+        async function deleteRecord(sn, rid) { if(!confirm(`Delete record from ${sn}?`))return; const pl={sheet:sn,action:'delete',id:rid}; const res=await postData(pl); if(res){ let arr; let loadFunc; switch(sn){ case 'MedicalHistory': arr=medicalHistory; loadFunc=loadMedicalHistory; break; case 'DoctorsOrders': arr=doctorOrders; loadFunc=loadDoctorOrders; break; case 'NursesNotes': arr=nurseNotes; loadFunc=loadNurseNotes; break; case 'Laboratory': arr=laboratoryRecords; loadFunc=loadLaboratory; break; case 'VitalSigns': arr=vitalSigns; loadFunc=loadVitalSigns; break; case 'Medications': arr=medications; loadFunc=loadMedications; break; case 'DischargePlans': arr=dischargePlans; loadFunc=setupDischargePage; break; default: console.error("Unknown sheet:", sn); return; } if(arr) { const index = arr.findIndex(r => r.id === rid); if (index > -1) arr.splice(index, 1); } if(loadFunc) { if (sn === 'DischargePlans') { setupDischargePage(); } else if (currentPatient) { loadFunc(currentPatient.id); } } if(sn === 'VitalSigns' && currentPatient) renderVitalSignsGraph(currentPatient.id); updateDashboard(); renderPatientsGrid(); alert('Deleted.'); } }
+
+        // --- Modal Opening Functions ---
+        function openAddMedicalHistoryModal(){document.getElementById('medicalHistoryForm').reset();document.getElementById('addMedicalHistoryModal').classList.add('show');}
+        function openAddDoctorOrderModal(){document.getElementById('doctorOrderForm').reset();populateDropdown('doDoctorName',doctorNames,"-- Physician --");document.getElementById('doDate').valueAsDate=new Date();document.getElementById('addDoctorOrderModal').classList.add('show');}
+        function openAddNurseNoteModal(){document.getElementById('nurseNoteForm').reset();populateDropdown('nnNurseName',nurseNames,"-- Nurse --");document.getElementById('nnDate').valueAsDate=new Date();document.getElementById('addNurseNoteModal').classList.add('show');}
+        function openAddLabRecordModal(){document.getElementById('labRecordForm').reset();populateLabTests();document.getElementById('labDateRequested').valueAsDate=new Date();document.getElementById('addLabRecordModal').classList.add('show');}
+        function openUpdateLabResultModal(labRecordId) { const record = laboratoryRecords.find(l => l.id === labRecordId); if (!record) { alert("Error: Lab record not found."); return; } document.getElementById('labResultForm').reset(); document.getElementById('labResultId').value = record.id; document.getElementById('labResultTestType').value = record.testType || ''; document.getElementById('labResultDateRequested').value = record.dateRequested || ''; document.getElementById('labResultDateCompleted').valueAsDate = new Date(); document.getElementById('labResultInterpretedBy').value = currentUser ? currentUser.name : 'Tech'; document.getElementById('labResultResults').value = record.results || ''; document.getElementById('labResultFileUrl').value = record.resultFileUrl || ''; document.getElementById('labResultFileName').value = record.resultFileName || ''; const preview = document.getElementById('file-preview'); const uploadStatus = document.getElementById('upload-status'); const fileInput = document.getElementById('labResultFile'); fileInput.value = null; if(record.resultFileUrl && record.resultFileUrl.match(/\.(jpeg|jpg|gif|png)$/i)){ preview.src = record.resultFileUrl; preview.style.display = 'block'; uploadStatus.textContent = `Current file: ${record.resultFileName || 'Image'}`; } else if (record.resultFileUrl) { preview.style.display = 'none'; uploadStatus.textContent = `Current file: ${record.resultFileName || 'File'}`; } else { preview.style.display = 'none'; uploadStatus.textContent = ''; } document.getElementById('updateLabResultModal').classList.add('show'); }
+        function openAddMedicationModal(){document.getElementById('medicationForm').reset();document.getElementById('medStartDate').valueAsDate=new Date();calculateMedicationRates();document.getElementById('addMedicationModal').classList.add('show');}
+        function openAddVitalsModal(){document.getElementById('vitalsForm').reset();const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());document.getElementById('vitalDateTime').value=now.toISOString().slice(0,16);calculateBMI();document.getElementById('addVitalsModal').classList.add('show');}
+        function openAddBillingItemModal() { const form = document.getElementById('billingItemForm'); if (form) { form.reset(); } else { console.error("openAddBillingItemModal: Cannot find form with ID 'billingItemForm'"); } document.getElementById('addBillingItemModal').classList.add('show'); }
+        function openAddPaymentModal() { const form = document.getElementById('paymentForm'); if (form) { form.reset(); } else { console.error("openAddPaymentModal: Cannot find form with ID 'paymentForm'"); } document.getElementById('addPaymentModal').classList.add('show'); }
+        function openAddClaimModal() { const form = document.getElementById('claimForm'); if(form) { form.reset(); } else { console.error("openAddClaimModal: Cannot find form with ID 'claimForm'"); } document.getElementById('addClaimModal').classList.add('show'); }
+
+        // --- File Upload Functions ---
+        function previewFile() {
+            const preview = document.getElementById('file-preview');
+            const fileInput = document.getElementById('labResultFile');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            const uploadStatus = document.getElementById('upload-status');
+
+            reader.onloadend = function () {
+                if (file && file.type.startsWith('image/')) {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                } else {
+                     preview.style.display = 'none';
+                }
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+                uploadStatus.textContent = `Selected: ${file.name}`;
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                uploadStatus.textContent = "No file selected.";
+            }
+             document.getElementById('labResultFileUrl').value = '';
+             document.getElementById('labResultFileName').value = '';
+        }
+        async function uploadFileToCloudinary(file) {
+            if (!file) return null;
+            if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_CLOUD_NAME === "YOUR_CLOUD_NAME") {
+                alert('Cloudinary configuration is missing. Cannot upload file.');
+                return null;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            const uploadStatus = document.getElementById('upload-status');
+            uploadStatus.textContent = 'Uploading file...';
+            try {
+                const response = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+                if (!response.ok) { const errorData = await response.json(); throw new Error(`Upload failed: ${errorData.error.message}`); }
+                const data = await response.json();
+                uploadStatus.textContent = 'Upload successful!';
+                console.log('Cloudinary response:', data);
+                return { url: data.secure_url, name: file.name };
+            } catch (error) {
+                console.error('File upload error:', error);
+                uploadStatus.textContent = `Upload failed: ${error.message}`;
+                alert(`File upload failed: ${error.message}`);
+                return null;
+            }
+        }
+        
+        // --- Billing Functions ---
+        async function addAutomaticBillingItem(patientId, description, code, defaultPrice) { if (!patientId) { console.error("addAutomaticBillingItem: No patientId provided."); return; } const price = servicePriceList[description] || defaultPrice || 500; const billingItem = { id: 'BI' + Date.now(), patientId: patientId, date: new Date().toISOString().split('T')[0], description: description, code: code || 'AUTO-SVC', quantity: 1, unitPrice: price, total: price }; const result = await postData({ sheet: 'BillingItems', action: 'add', data: billingItem }); if (result && result.status === 'success') { billingItems.push(billingItem); console.log(`Successfully auto-billed '${description}' for patient ${patientId}.`); const billingPatientSelect = document.getElementById('billingSelectPatient'); if (document.getElementById('billingRecords').classList.contains('active') && billingPatientSelect && billingPatientSelect.value === patientId) { renderBillingItemsTable(patientId); } } else { console.error(`Failed to auto-bill '${description}' for patient ${patientId}.`); } }
+        async function saveBillingItem(e) { e.preventDefault(); const patientId = document.getElementById('billingSelectPatient').value; if (!patientId) { alert('Please select a patient first.'); return; } const billingItem = { id: 'BI' + Date.now(), patientId: patientId, date: document.getElementById('billingItemDate').value, description: document.getElementById('billingItemDescription').value, code: document.getElementById('billingItemCode').value, quantity: parseInt(document.getElementById('billingItemQuantity').value), unitPrice: parseFloat(document.getElementById('billingItemUnitPrice').value), total: parseInt(document.getElementById('billingItemQuantity').value) * parseFloat(document.getElementById('billingItemUnitPrice').value) }; const result = await postData({ sheet: 'BillingItems', action: 'add', data: billingItem }); if (result && result.status === 'success') { billingItems.push(billingItem); closeModal('addBillingItemModal'); loadBillingDataForPatient(patientId); alert('Billing item added successfully!'); await addAuditLogEntry(patientId, `Added Billing Item: ${billingItem.description}`, `Qty: ${billingItem.quantity}, Total: ${billingItem.total.toFixed(2)}`); } else { alert('Failed to save billing item.'); } }
+        async function savePayment(e) { e.preventDefault(); const patientId = document.getElementById('billingSelectPatient').value; if (!patientId) { alert('Please select a patient first.'); return; } const payment = { id: 'PAY' + Date.now(), patientId: patientId, date: document.getElementById('paymentDate').value, method: document.getElementById('paymentMethod').value, amount: parseFloat(document.getElementById('paymentAmount').value), reference: document.getElementById('paymentReference').value, notes: document.getElementById('paymentNotes').value }; const result = await postData({ sheet: 'Payments', action: 'add', data: payment }); if (result && result.status === 'success') { payments.push(payment); closeModal('addPaymentModal'); loadBillingDataForPatient(patientId); alert('Payment recorded successfully!'); await addAuditLogEntry(patientId, `Recorded Payment`, `Method: ${payment.method}, Amount: ${payment.amount.toFixed(2)}, Ref: ${payment.reference || 'N/A'}`); } else { alert('Failed to record payment.'); } }
+        async function saveClaim(e) { e.preventDefault(); const patientId = document.getElementById('billingSelectPatient').value; if (!patientId) { alert('Please select a patient first.'); return; } const claim = { id: 'CLM' + Date.now(), patientId: patientId, claimNumber: document.getElementById('claimNumber').value, dateFiled: document.getElementById('claimDateFiled').value, status: document.getElementById('claimStatus').value, eobReceived: document.getElementById('claimEOB').value, amount: parseFloat(document.getElementById('claimAmount').value) || 0, notes: document.getElementById('claimNotes').value }; const result = await postData({ sheet: 'Claims', action: 'add', data: claim }); if (result && result.status === 'success') { claims.push(claim); closeModal('addClaimModal'); loadBillingDataForPatient(patientId); alert('Claim added successfully!'); await addAuditLogEntry(patientId, `Added Claim: ${claim.claimNumber}`, `Status: ${claim.status}, Amount: ${claim.amount.toFixed(2)}`); } else { alert('Failed to add claim.'); } }
+        async function savePatientInsuranceInfo() { const patientId = document.getElementById('billingSelectPatient').value; if (!patientId) { alert('Please select a patient to save info for.'); return; } const patientIndex = patients.findIndex(p => p.id === patientId); if (patientIndex === -1) { alert('Error: Could not find patient data.'); return; } const insuranceData = { insurance: document.getElementById('billingInsuranceProvider').value, policyNumber: document.getElementById('billingPolicyNumber').value, insuredName: document.getElementById('billingInsuredName').value, coverageType: document.getElementById('billingCoverageType').value, authNo: document.getElementById('billingAuthNo').value }; const payload = { sheet: 'Patients', action: 'update', id: patientId, data: insuranceData }; const result = await postData(payload); if (result && result.status === 'success') { Object.assign(patients[patientIndex], insuranceData); alert('Patient insurance information saved!'); await addAuditLogEntry(patientId, `Updated Patient Insurance Info`); } else { alert('Failed to save insurance information.'); } }
+        function setupBillingPage() { populateDropdown('billingSelectPatient', (patients || []).map(p => ({ value: p.id, text: `${p.name} (${p.id})` })), "-- Select Patient --", true); const dataSection = document.getElementById('billingDataSection'); if (dataSection) { dataSection.style.display = 'none'; } else { console.error("setupBillingPage: CRITICAL - Cannot find element with ID 'billingDataSection'"); } clearBillingTables(); }
+        function loadBillingDataForPatient(patientId) { const dataSection = document.getElementById('billingDataSection'); if (!dataSection) { console.error("loadBillingDataForPatient: CRITICAL - Cannot find 'billingDataSection'. Aborting."); return; } if (!patientId) { dataSection.style.display = 'none'; clearBillingTables(); return; } const patient = patients.find(p => p.id === patientId); if (!patient) { alert("Patient data not found."); dataSection.style.display = 'none'; clearBillingTables(); return; } dataSection.style.display = 'block'; document.getElementById('billingInsuranceProvider').value = patient.insurance || ''; document.getElementById('billingPolicyNumber').value = patient.policyNumber || ''; document.getElementById('billingInsuredName').value = patient.insuredName || ''; document.getElementById('billingCoverageType').value = patient.coverageType || ''; document.getElementById('billingAuthNo').value = patient.authNo || ''; renderBillingItemsTable(patientId); renderPaymentRecordTable(patientId); renderClaimsTable(patientId); renderAuditLogTable(patientId); }
+        function clearBillingTables() { const tables = ['billingItemsTable', 'paymentRecordTable', 'claimsTable', 'auditLogTable']; tables.forEach(id => { const tbody = document.querySelector(`#${id} tbody`); if (tbody) { tbody.innerHTML = ''; } const emptyMsg = document.getElementById(id.replace('Table', 'Empty')); if (emptyMsg) { emptyMsg.style.display = 'block'; } else { console.error(`clearBillingTables: Cannot find empty message element for table '${id}'`); } }); }
+        function renderBillingItemsTable(patientId) { const tbody = document.querySelector('#billingItemsTable tbody'); const emptyMsg = document.getElementById('billingItemsEmpty'); if (!tbody || !emptyMsg) return; const patientBillingItems = billingItems.filter(item => item.patientId === patientId); if (patientBillingItems.length === 0) { tbody.innerHTML = ''; emptyMsg.style.display = 'block'; } else { emptyMsg.style.display = 'none'; tbody.innerHTML = patientBillingItems.map(item => `<tr><td>${item.date}</td><td>${item.description}</td><td>${item.code || 'N/A'}</td><td>${item.quantity}</td><td>₱${parseFloat(item.unitPrice || 0).toFixed(2)}</td><td>₱${parseFloat(item.total || 0).toFixed(2)}</td><td class="table-actions"><button class="action-btn delete" onclick="deleteBillingItem('${item.id}')">×</button></td></tr>`).join(''); } }
+        function renderPaymentRecordTable(patientId) { const tbody = document.querySelector('#paymentRecordTable tbody'); const emptyMsg = document.getElementById('paymentRecordEmpty'); if (!tbody || !emptyMsg) return; const patientPayments = payments.filter(payment => payment.patientId === patientId); if (patientPayments.length === 0) { tbody.innerHTML = ''; emptyMsg.style.display = 'block'; } else { emptyMsg.style.display = 'none'; let currentBalance = getTotalBilling(patientId); tbody.innerHTML = patientPayments.sort((a, b) => new Date(a.date) - new Date(b.date)).map(payment => { currentBalance -= parseFloat(payment.amount || 0); return `<tr><td>${payment.date}</td><td>${payment.method}</td><td>₱${parseFloat(payment.amount || 0).toFixed(2)}</td><td>₱${currentBalance.toFixed(2)}</td><td class="table-actions"><button class="action-btn delete" onclick="deletePayment('${payment.id}')">×</button></td></tr>`}).join(''); } }
+        function renderClaimsTable(patientId) { const tbody = document.querySelector('#claimsTable tbody'); const emptyMsg = document.getElementById('claimsEmpty'); if (!tbody || !emptyMsg) return; const patientClaims = claims.filter(claim => claim.patientId === patientId); if (patientClaims.length === 0) { tbody.innerHTML = ''; emptyMsg.style.display = 'block'; } else { emptyMsg.style.display = 'none'; tbody.innerHTML = patientClaims.map(claim => `<tr><td>${claim.claimNumber}</td><td>${claim.dateFiled}</td><td><span class="status-badge status-${String(claim.status).toLowerCase().replace(' ', '-')}">${claim.status}</span></td><td>${claim.eobReceived || 'N/A'}</td><td class="table-actions"><button class="action-btn edit" style="background-color: #ffc107; color: #000;" onclick="openUpdateClaimStatusModal('${claim.id}')">Update</button><button class="action-btn delete" onclick="deleteClaim('${claim.id}')">×</button></td></tr>`).join(''); } }
+        function renderAuditLogTable(patientId) { const tbody = document.querySelector('#auditLogTable tbody'); const emptyMsg = document.getElementById('auditLogEmpty'); if (!tbody || !emptyMsg) { console.error("renderAuditLogTable: Cannot find table body or empty message element."); return; } const patientAuditLogs = auditLogs.filter(log => log.patientId === patientId); if (patientAuditLogs.length === 0) { tbody.innerHTML = ''; emptyMsg.style.display = 'block'; } else { emptyMsg.style.display = 'none'; tbody.innerHTML = patientAuditLogs.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)).map(log => `<tr><td>${log.dateTime}</td><td>${log.staffName}</td><td>${log.action}</td><td>${log.remarks || 'N/A'}</td></tr>`).join(''); } }
+        function getTotalBilling(patientId) { return billingItems.filter(item => item.patientId === patientId).reduce((total, item) => total + parseFloat(item.total || 0), 0); }
+        function getTotalPayments(patientId) { return payments.filter(payment => payment.patientId === patientId).reduce((total, payment) => total + parseFloat(payment.amount || 0), 0); }
+        async function deleteBillingItem(itemId) { if (confirm('Delete this billing item?')) { const item = billingItems.find(i => i.id === itemId); const patientId = item ? item.patientId : document.getElementById('billingSelectPatient').value; const result = await postData({ sheet: 'BillingItems', action: 'delete', id: itemId }); if (result && result.status === 'success') { billingItems = billingItems.filter(i => i.id !== itemId); loadBillingDataForPatient(patientId); await addAuditLogEntry(patientId, `Deleted Billing Item: ${item ? item.description : itemId}`); } else { alert('Failed to delete item.'); } } }
+        async function deletePayment(paymentId) { if (confirm('Delete this payment record?')) { const payment = payments.find(p => p.id === paymentId); const patientId = payment ? payment.patientId : document.getElementById('billingSelectPatient').value; const result = await postData({ sheet: 'Payments', action: 'delete', id: paymentId }); if (result && result.status === 'success') { payments = payments.filter(p => p.id !== paymentId); loadBillingDataForPatient(patientId); await addAuditLogEntry(patientId, `Deleted Payment ID: ${paymentId}`); } else { alert('Failed to delete payment.'); } } }
+        async function deleteClaim(claimId) { if (confirm('Delete this claim?')) { const claim = claims.find(c => c.id === claimId); const patientId = claim ? claim.patientId : document.getElementById('billingSelectPatient').value; const result = await postData({ sheet: 'Claims', action: 'delete', id: claimId }); if (result && result.status === 'success') { claims = claims.filter(c => c.id !== claimId); loadBillingDataForPatient(patientId); await addAuditLogEntry(patientId, `Deleted Claim: ${claim ? claim.claimNumber : claimId}`); } else { alert('Failed to delete claim.'); } } }
+        function openUpdateClaimStatusModal(claimId) { const claim = claims.find(c => c.id === claimId); if (!claim) { alert('Error: Claim not found.'); return; } document.getElementById('updateClaimId').value = claim.id; document.getElementById('updateClaimNumberDisplay').value = claim.claimNumber || 'N/A'; document.getElementById('updateClaimStatusSelect').value = claim.status || ''; document.getElementById('updateClaimEOBSelect').value = ""; document.getElementById('updateClaimStatusModal').classList.add('show'); }
+        async function saveClaimStatus(event) { event.preventDefault(); const claimId = document.getElementById('updateClaimId').value; const newStatus = document.getElementById('updateClaimStatusSelect').value; const newEOB = document.getElementById('updateClaimEOBSelect').value; const claimIndex = claims.findIndex(c => c.id === claimId); if (claimIndex === -1) { alert('Error: Claim not found for saving.'); return; } const updateData = {}; if (newStatus && claims[claimIndex].status !== newStatus) { updateData.status = newStatus; } if (newEOB && claims[claimIndex].eobReceived !== newEOB) { updateData.eobReceived = newEOB; } if (Object.keys(updateData).length === 0) { alert("No changes detected."); closeModal('updateClaimStatusModal'); return; } const patientId = claims[claimIndex].patientId; const payload = { sheet: 'Claims', action: 'update', id: claimId, data: updateData }; const result = await postData(payload); if (result && result.status === 'success') { if (updateData.status) { claims[claimIndex].status = updateData.status; } if (updateData.eobReceived) { claims[claimIndex].eobReceived = updateData.eobReceived; } alert('Claim status updated successfully!'); closeModal('updateClaimStatusModal'); loadBillingDataForPatient(patientId); const updatedClaim = claims[claimIndex]; await addAuditLogEntry(patientId, `Updated Claim ${updatedClaim.claimNumber} Status`, `New Status: ${updatedClaim.status}, EOB: ${updatedClaim.eobReceived || 'N/A'}`); } else { alert('Failed to update claim status.'); } }
+        async function addAuditLogEntry(patientId, actionDescription, remarks = '') { if (!currentUser || !patientId) { console.error("Audit log skipped: Missing user or patient ID."); return; } const logEntry = { id: 'AUD' + Date.now(), patientId: patientId, dateTime: new Date().toISOString().replace('T', ' ').substring(0, 19), staffName: `${currentUser.name} (${currentUser.role})`, action: actionDescription, remarks: remarks }; const result = await postData({ sheet: 'AuditLogs', action: 'add', data: logEntry }); if (result && result.status === 'success') { auditLogs.push(logEntry); const billingPatientSelect = document.getElementById('billingSelectPatient'); if (document.getElementById('billingRecords').classList.contains('active') && billingPatientSelect && billingPatientSelect.value === patientId) { renderAuditLogTable(patientId); } } else { console.error("Failed to save audit log entry:", logEntry); } }
+
+        // --- Discharge Plan Functions ---
+        function setupDischargePage() {
+            populateDropdown('dischargeSelectPatient', (patients || []).map(p => ({ value: p.id, text: `${p.name} (${p.id})` })), "-- Select Patient --", true);
+            const dataSection = document.getElementById('dischargeDataSection');
+            const placeholder = document.getElementById('dischargePlanPlaceholder');
+            const form = document.getElementById('dischargePlanForm');
+            if (dataSection) dataSection.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+            if (form) form.reset();
+            const hiddenId = document.getElementById('dischargePlanId');
+            if (hiddenId) hiddenId.value = '';
+        }
+        function loadDischargeDataForPatient(patientId) {
+            const dataSection = document.getElementById('dischargeDataSection');
+            const placeholder = document.getElementById('dischargePlanPlaceholder');
+            const form = document.getElementById('dischargePlanForm');
+            const hiddenId = document.getElementById('dischargePlanId');
+             if (!dataSection || !placeholder || !form || !hiddenId) { console.error("Discharge plan elements not found!"); return; }
+            if (!patientId) { dataSection.style.display = 'none'; placeholder.style.display = 'block'; form.reset(); hiddenId.value = ''; return; }
+            const existingPlan = dischargePlans.find(plan => plan.patientId === patientId);
+            form.reset(); hiddenId.value = '';
+            if (existingPlan) {
+                hiddenId.value = existingPlan.id || '';
+                Object.keys(existingPlan).forEach(key => {
+                    const element = document.getElementById(key);
+                    if(element && key !== 'id' && key !== 'patientId') {
+                        element.value = existingPlan[key] || '';
+                    }
+                });
+            } else {
+                 const patient = patients.find(p => p.id === patientId);
+                 if(patient && patient.admissionDate) { document.getElementById('dpAdmissionDate').value = patient.admissionDate; }
+                 document.getElementById('dpDischargeDate').valueAsDate = new Date();
+            }
+            dataSection.style.display = 'block';
+            placeholder.style.display = 'none';
+        }
+        async function saveDischargePlan(e) {
+            e.preventDefault();
+            const patientId = document.getElementById('dischargeSelectPatient').value;
+            if (!patientId) { alert('Please select a patient first.'); return; }
+            const existingPlanId = document.getElementById('dischargePlanId').value;
+            const isUpdate = !!existingPlanId;
+            const dischargeData = { patientId: patientId };
+            const formElements = document.getElementById('dischargePlanForm').elements;
+            for(let i = 0; i < formElements.length; i++){
+                const element = formElements[i];
+                if(element.id && element.id.startsWith('dp')){
+                    dischargeData[element.id] = element.value;
+                }
+            }
+            let payload;
+            if (isUpdate) {
+                dischargeData.id = existingPlanId;
+                payload = { sheet: 'DischargePlans', action: 'update', id: existingPlanId, data: dischargeData };
+            } else {
+                dischargeData.id = 'DP' + Date.now();
+                payload = { sheet: 'DischargePlans', action: 'add', data: dischargeData };
+            }
+            const result = await postData(payload);
+            if (result && result.status === 'success') {
+                if (isUpdate) {
+                    const index = dischargePlans.findIndex(plan => plan.id === existingPlanId);
+                    if (index !== -1) { dischargePlans[index] = dischargeData; }
+                    else { dischargePlans.push(dischargeData); }
+                    alert('Discharge Plan updated successfully!');
+                } else {
+                    dischargePlans.push(dischargeData);
+                    document.getElementById('dischargePlanId').value = dischargeData.id;
+                    alert('Discharge Plan saved successfully!');
+                }
+            } else { alert(`Failed to ${isUpdate ? 'update' : 'save'} Discharge Plan.`); }
+        }
+
+        // --- Other Utility Functions ---
+        function populateDropdown(sid,items,ph,isObject=false){const s=document.getElementById(sid);if(!s)return;s.innerHTML=`<option value="">${ph}</option>`;if(items&&items.length>0){items.forEach(i=>{const o=document.createElement('option');if(isObject){o.value=i.value;o.textContent=i.text;}else{o.value=i;o.textContent=i;}s.appendChild(o);});}}
+        function populateLabCategories(){populateDropdown('labTestCategory',Object.keys(labTestData),"-- Category --");populateLabTests();}
+        function populateLabTests(){const cat=document.getElementById('labTestCategory').value;const tests=labTestData[cat]||[];populateDropdown('labTestType',tests,"-- Test --");}
+        async function saveMedicalHistory(e){e.preventDefault();const d={id:'MH'+Date.now(),patientId:currentPatient.id,allergies:document.getElementById('mhAllergies').value,pastConditions:document.getElementById('mhPastConditions').value,pastSurgeries:document.getElementById('mhPastSurgeries').value,currentMedications:document.getElementById('mhCurrentMedications').value,vaccines:document.getElementById('mhVaccines').value,familyHistory:document.getElementById('mhFamilyHistory').value};const res=await postData({sheet:'MedicalHistory',action:'add',data:d});if(res){medicalHistory.push(d);loadMedicalHistory(currentPatient.id);closeModal('addMedicalHistoryModal');alert('Saved.');}}
+        async function saveDoctorOrder(e) { e.preventDefault(); const drug=document.getElementById('doDrugName').value; const dose=document.getElementById('doDosage').value; const route=document.getElementById('doRoute').value; const freq=document.getElementById('doFrequency').value; const time=document.getElementById('doTime').value; const date=document.getElementById('doDate').value; const doc=document.getElementById('doDoctorName').value; const details=`Administer ${drug} ${dose} ${route} ${freq}${time?` at ${time}`:''}.`; const orderData={id:'ORD'+Date.now(),patientId:currentPatient.id,orderId:'ORD'+String((doctorOrders||[]).length+1).padStart(4,'0'),date:date,doctorName:doc,orderDetails:details,status:'Pending',notes:document.getElementById('doNotes').value}; const res=await postData({sheet:'DoctorsOrders',action:'add',data:orderData}); if(res){ doctorOrders.push(orderData); loadDoctorOrders(currentPatient.id); updateDashboard(); closeModal('addDoctorOrderModal'); alert('Order saved.'); await addMedicationFromOrder(drug,dose,route,freq,time,date); await addAutomaticBillingItem(orderData.patientId, "Doctor's Order", "DOC-ORDER", servicePriceList["Doctor's Order"]); }else{ alert("Failed Order Save."); }}
+        async function saveNurseNote(e){ e.preventDefault(); const d={id:'NN'+Date.now(),patientId:currentPatient.id,date:document.getElementById('nnDate').value,nurseName:document.getElementById('nnNurseName').value,goals:document.getElementById('nnGoals').value,interventions:document.getElementById('nnInterventions').value,evaluation:document.getElementById('nnEvaluation').value}; const res=await postData({sheet:'NursesNotes',action:'add',data:d}); if(res){ nurseNotes.push(d); loadNurseNotes(currentPatient.id); closeModal('addNurseNoteModal'); alert('Saved.'); await addAutomaticBillingItem(d.patientId, "Nurse's Note", "NURSE-NOTE", servicePriceList["Nurse's Note"]); }}
+        async function saveLabRecord(e){e.preventDefault();const d={id:'LAB'+Date.now(),patientId:currentPatient.id,requestId:'LAB'+String((laboratoryRecords||[]).length+1).padStart(4,'0'),testType:document.getElementById('labTestType').value,dateRequested:document.getElementById('labDateRequested').value,dateCompleted:'',results:'',interpretedBy:'', status: 'Pending', notes: document.getElementById('labNotes').value, resultFileUrl:'', resultFileName:''};const res=await postData({sheet:'Laboratory',action:'add',data:d});if(res){laboratoryRecords.push(d);loadLaboratory(currentPatient.id);updateDashboard();closeModal('addLabRecordModal');alert('Lab Request Saved.');}}
+        async function saveLabResult(e) {
+            e.preventDefault();
+            const labId = document.getElementById('labResultId').value;
+            const recIdx = laboratoryRecords.findIndex(l => l.id === labId);
+            if (recIdx === -1) { alert("Error: Record not found."); return; }
+            const originalRecord = laboratoryRecords[recIdx];
+            const fileInput = document.getElementById('labResultFile');
+            const file = fileInput.files[0];
+            let uploadedFileData = null;
+            let currentFileUrl = document.getElementById('labResultFileUrl').value;
+            let currentFileName = document.getElementById('labResultFileName').value;
+            if (file) {
+                uploadedFileData = await uploadFileToCloudinary(file);
+                if (!uploadedFileData) { return; }
+                currentFileUrl = uploadedFileData.url;
+                currentFileName = uploadedFileData.name;
+            }
+            const updateData = { dateCompleted: document.getElementById('labResultDateCompleted').value, interpretedBy: document.getElementById('labResultInterpretedBy').value, results: document.getElementById('labResultResults').value, status: 'Completed', resultFileUrl: currentFileUrl, resultFileName: currentFileName };
+            const payload = { sheet: 'Laboratory', action: 'update', id: labId, data: updateData };
+            const res = await postData(payload);
+            if (res) {
+                Object.assign(laboratoryRecords[recIdx], updateData);
+                loadLaboratory(currentPatient.id);
+                updateDashboard();
+                closeModal('updateLabResultModal');
+                alert('Result Saved.');
+                await addAutomaticBillingItem(originalRecord.patientId, originalRecord.testType, 'LAB-TEST', servicePriceList.DEFAULT_LAB);
+            } else {
+                alert("Failed to save result data to sheet.");
+                const uploadStatus = document.getElementById('upload-status');
+                if(uploadedFileData) uploadStatus.textContent += ' (Sheet save failed)';
+            }
+            fileInput.value = null;
+            previewFile();
+        }
+        async function saveMedication(e){e.preventDefault();const d={id:'MED'+Date.now(),patientId:currentPatient.id,drugName:document.getElementById('medDrugName').value,dosage:document.getElementById('medDosage').value,route:document.getElementById('medRoute').value,frequency:document.getElementById('medFrequency').value,time:document.getElementById('medTime').value,startDate:document.getElementById('medStartDate').value,endDate:document.getElementById('medEndDate').value,totalVolume:document.getElementById('medTotalVolume').value,infusionTimeValue:document.getElementById('medInfusionTimeValue').value,infusionTimeUnit:document.getElementById('medInfusionTimeUnit').value,dropFactor:document.getElementById('medDropFactor').value,drugAmount:document.getElementById('medDrugAmount').value,drugUnit:document.getElementById('medDrugUnit').value,solutionVolume:document.getElementById('medSolutionVolume').value, stockStrength:document.getElementById('medStockStrength').value, stockVolume:document.getElementById('medStockVolume').value, desiredDose:document.getElementById('medDesiredDose').value };const res=await postData({sheet:'Medications',action:'add',data:d});if(res){medications.push(d);loadMedications(currentPatient.id);updateDashboard();closeModal('addMedicationModal');alert('Saved.');}}
+        async function addVitalSign(e){ e.preventDefault(); calculateBMI(); const nr={id:'VS'+Date.now(),patientId:currentPatient.id,dateTime:document.getElementById('vitalDateTime').value,height:document.getElementById('vitalHeight').value,weight:document.getElementById('vitalWeight').value,bmi:document.getElementById('vitalBMI').value,bloodPressure:document.getElementById('vitalBP').value,temperature:document.getElementById('vitalTemp').value,heartRate:document.getElementById('vitalHR').value,oxygenSat:document.getElementById('vitalO2').value,respiratoryRate:document.getElementById('vitalRR').value,ivFluid:document.getElementById('vitalIV').value,intake:document.getElementById('vitalIntake').value,output:document.getElementById('vitalOutput').value}; const res=await postData({sheet:'VitalSigns',action:'add',data:nr}); if (res){ vitalSigns.push(nr); loadVitalSigns(currentPatient.id); renderPatientsGrid(); renderVitalSignsGraph(currentPatient.id); closeModal('addVitalsModal'); alert('Saved.'); await addAutomaticBillingItem(nr.patientId, "Vitals Check", "VITALS", servicePriceList["Vitals Check"]); }}
+        async function addMedicationFromOrder(drug,dose,route,freq,time,start){const md={id:'MED'+Date.now(),patientId:currentPatient.id,drugName:drug,dosage:dose,route:route,frequency:freq,time:time||"",startDate:start||new Date().toISOString().split('T')[0],endDate:""};const res=await postData({sheet:'Medications',action:'add',data:md});if(res){medications.push(md);updateDashboard();if(document.getElementById('patientProfile').classList.contains('active')){loadMedications(currentPatient.id);}alert(`"${drug}" auto-added.`);}else{alert(`Failed auto-add "${drug}". Add manually.`);}}
+        function validateVitalInput(el){const id=el.id;const v=el.value;let abn=false;el.classList.remove('input-abnormal');if(v==='')return;try{switch(id){case 'vitalHR':const hr=parseInt(v);if(!isNaN(hr)&&(hr<60||hr>100))abn=true;break;case 'vitalO2':const spo2=parseInt(v);if(!isNaN(spo2)&&spo2<94)abn=true;break;case 'vitalBP':if(v.includes('/')&&v.match(/^[0-9]{1,3}\/[0-9]{1,3}$/)){const p=v.split('/');const s=parseInt(p[0]),d=parseInt(p[1]);if((!isNaN(s)&&(s<90||s>140))||(!isNaN(d)&&d>90))abn=true;}break;case 'vitalRR':const rr=parseInt(v);if(!isNaN(rr)&&(rr<12||rr>20))abn=true;break;case 'vitalTemp':const t=parseFloat(v);if(!isNaN(t)&&(t<36.0||t>38.0))abn=true;break;}if(abn){el.classList.add('input-abnormal');}}catch(e){console.warn("Valid err:",e);}}
+        function calculateBMI(){const h=parseFloat(document.getElementById('vitalHeight').value);const w=parseFloat(document.getElementById('vitalWeight').value);const bmiF=document.getElementById('vitalBMI');if(!isNaN(h)&&h>0&&!isNaN(w)&&w>0){const bmi=w/(h*h);bmiF.value=bmi.toFixed(2);}else{bmiF.value='';}}
+        function isVitalNormal(type,v1,v2=null){if(v1===null||v1===undefined||v1==='')return true;try{switch(type){case 'HR':const hr=parseInt(v1);return !isNaN(hr)&&hr>=60&&hr<=100;case 'SpO2':const spo2=parseInt(v1);return !isNaN(spo2)&&spo2>=94;case 'BP':const sys=parseInt(v1);const dia=parseInt(v2);const sn=!isNaN(sys)&&sys>=90&&sys<=140;const dn=!isNaN(dia)&&dia<=90;return sn&&dn;case 'RR':const rr=parseInt(v1);return !isNaN(rr)&&rr>=12&&rr<=20;case 'Temp':const temp=parseFloat(v1);return !isNaN(temp)&&temp>=36.0&&temp<=38.0;default:return true;}}catch(e){console.error("isVN err:",type,v1,v2,e);return true;}}
+        function parseUnitValue(valueString){if(!valueString)return{value:NaN,unit:''};const match=String(valueString).match(/([0-9.,]+)\s*([a-zA-Z]+)/);return match?{value:parseFloat(match[1].replace(',','')),unit:match[2]}:{value:parseFloat(String(valueString).replace(',','')),unit:''};}
+        function parseFraction(fractionString){if(!fractionString||!fractionString.includes('/'))return{numerator:NaN,denominator:NaN};const parts=fractionString.split('/');return{numerator:parseFloat(parts[0]),denominator:parseFloat(parts[1])};}
+        function calculateMedicationRates(){const vol=parseFloat(document.getElementById('medTotalVolume').value);const timeV=parseFloat(document.getElementById('medInfusionTimeValue').value);const timeU=document.getElementById('medInfusionTimeUnit').value;const df=parseFloat(document.getElementById('medDropFactor').value);const drugA=parseFloat(document.getElementById('medDrugAmount').value);const drugU=document.getElementById('medDrugUnit').value;const solV=parseFloat(document.getElementById('medSolutionVolume').value);const stockStrengthRaw=document.getElementById('medStockStrength').value;const stockVolumeInput=parseFloat(document.getElementById('medStockVolume').value);const desiredDoseRaw=document.getElementById('medDesiredDose').value||document.getElementById('medDosage').value;let tH=0,tM=0,frMH=null,frGM=null,dr=null,drU='';let amountToGive=null,numTablets=null;let fMH='',fGM='',fD='',fAmount='',fTablets='';if(!isNaN(timeV)&&timeV>0){if(timeU==='hours'){tH=timeV;tM=timeV*60;}else{tM=timeV;tH=timeV/60;}}if(!isNaN(vol)&&vol>0&&tH>0){frMH=vol/tH;document.getElementById('calcFlowRateMlHr').textContent=frMH.toFixed(2)+' mL/hr';fMH=`(${vol}mL / ${tH.toFixed(2)}hr)`;}else{document.getElementById('calcFlowRateMlHr').textContent='--';}document.getElementById('formulaFlowRateMlHr').textContent=fMH;if(!isNaN(vol)&&vol>0&&tM>0&&!isNaN(df)&&df>0){frGM=(vol/tM)*df;document.getElementById('calcFlowRateGttsMin').textContent=Math.round(frGM)+' gtts/min';fGM=`(${vol}mL / ${tM}min) * ${df}gtts/mL`;}else{document.getElementById('calcFlowRateGttsMin').textContent='--';}document.getElementById('formulaFlowRateGttsMin').textContent=fGM;if(!isNaN(drugA)&&drugA>0&&!isNaN(solV)&&solV>0&&frMH!==null){const conc=drugA/solV;dr=conc*frMH;drU=`${drugU}/hr`;fD=`(${drugA}${drugU}/${solV}mL) * ${frMH.toFixed(2)}mL/hr`;document.getElementById('calcDosageRate').textContent=dr.toFixed(2)+' '+drU;}else{document.getElementById('calcDosageRate').textContent='--';}document.getElementById('formulaDosageRate').textContent=fD;const desired=parseUnitValue(desiredDoseRaw);const stockFraction=parseFraction(stockStrengthRaw);const stockUnitValue=parseUnitValue(stockStrengthRaw);let stockValue=NaN;let stockUnit='';let stockVol=1;if(!isNaN(stockFraction.numerator)&&!isNaN(stockFraction.denominator)){stockValue=stockFraction.numerator;stockVol=stockFraction.denominator;stockUnit=desired.unit||'unit';fAmount=`(${desired.value}${desired.unit}/${stockValue}${stockUnit})*${stockVol}mL`;}else if(!isNaN(stockUnitValue.value)){stockValue=stockUnitValue.value;stockUnit=stockUnitValue.unit||desired.unit;if(!isNaN(stockVolumeInput)&&stockVolumeInput>0){stockVol=stockVolumeInput;fAmount=`(${desired.value}${desired.unit}/${stockValue}${stockUnit})*${stockVol}mL`;}else{stockVol=1;fAmount=`(${desired.value}${desired.unit}/${stockValue}${stockUnit})*${stockVol}`;fTablets=`${desired.value}${desired.unit}/${stockValue}${stockUnit}`;}}if(!isNaN(desired.value)&&!isNaN(stockValue)&&desired.unit&&stockUnit&&desired.unit.toLowerCase()!==stockUnit.toLowerCase()){fAmount=`Unit mismatch: ${desired.unit} vs ${stockUnit}`;fTablets=`Unit mismatch: ${desired.unit} vs ${stockUnit}`;amountToGive=null;numTablets=null;}else if(!isNaN(desired.value)&&!isNaN(stockValue)&&stockValue!==0){if(stockVol>0){amountToGive=(desired.value/stockValue)*stockVol;document.getElementById('calcAmountToGive').textContent=amountToGive.toFixed(2)+(stockVol!==1?' mL':'');}else{document.getElementById('calcAmountToGive').textContent='--';}if(stockVol===1||isNaN(stockVol)){numTablets=desired.value/stockValue;document.getElementById('calcNumTablets').textContent=numTablets.toFixed(2)+' tablets';}else{document.getElementById('calcNumTablets').textContent='--';fTablets='';}}else{amountToGive=null;numTablets=null;document.getElementById('calcAmountToGive').textContent='--';document.getElementById('calcNumTablets').textContent='--';}document.getElementById('formulaAmountToGive').textContent=fAmount?`Formula: ${fAmount}`:'';document.getElementById('formulaNumTablets').textContent=fTablets?`Formula: ${fTablets}`:'';}
+        function renderVitalSignsGraph(patientId){const gc=document.getElementById('vitalSignsGraphContainer');const ndm=document.getElementById('noVitalsGraphData');const can=document.getElementById('vitalSignsChart');if(!can){console.error("Canvas not found");return;}const ctx=can.getContext('2d');if(!ctx){console.error("Canvas context error");return;}if(vitalSignsChartInstance){vitalSignsChartInstance.destroy();vitalSignsChartInstance=null;}const pv=(vitalSigns||[]).filter(v=>v.patientId===patientId&&v.dateTime).map(v=>({...v,dateObj:new Date(v.dateTime)})).filter(v=>!isNaN(v.dateObj.getTime())).sort((a,b)=>a.dateObj-b.dateObj);if(pv.length<1){gc.style.display='none';ndm.style.display='block';return;}else{gc.style.display='block';ndm.style.display='none';}const labels=pv.map(v=>v.dateTime.replace('T',' '));const hrData=pv.map(v=>v.heartRate?parseInt(v.heartRate):null);const spo2Data=pv.map(v=>v.oxygenSat?parseInt(v.oxygenSat):null);const rrData=pv.map(v=>v.respiratoryRate?parseInt(v.respiratoryRate):null);const tempData=pv.map(v=>v.temperature?parseFloat(v.temperature):null);const sysData=pv.map(v=>(v.bloodPressure&&v.bloodPressure.includes('/'))?parseInt(v.bloodPressure.split('/')[0])||null:null);const diaData=pv.map(v=>(v.bloodPressure&&v.bloodPressure.includes('/'))?parseInt(v.bloodPressure.split('/')[1])||null:null);const nColor='rgb(54, 162, 235)';const abColor='rgb(255, 99, 132)';vitalSignsChartInstance=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'HR',data:hrData,yAxisID:'yLeft',tension:0.1,segment:{borderColor:ctx=>isVitalNormal('HR',ctx.p1.raw)?nColor:abColor},pointBackgroundColor:ctx=>isVitalNormal('HR',ctx.raw)?nColor:abColor,pointBorderColor:ctx=>isVitalNormal('HR',ctx.raw)?nColor:abColor},{label:'SpO2',data:spo2Data,yAxisID:'yLeft',tension:0.1,segment:{borderColor:ctx=>isVitalNormal('SpO2',ctx.p1.raw)?nColor:abColor},pointBackgroundColor:ctx=>isVitalNormal('SpO2',ctx.raw)?nColor:abColor,pointBorderColor:ctx=>isVitalNormal('SpO2',ctx.raw)?nColor:abColor},{label:'RR',data:rrData,yAxisID:'yRight',tension:0.1,segment:{borderColor:ctx=>isVitalNormal('RR',ctx.p1.raw)?nColor:abColor},pointBackgroundColor:ctx=>isVitalNormal('RR',ctx.raw)?nColor:abColor,pointBorderColor:ctx=>isVitalNormal('RR',ctx.raw)?nColor:abColor},{label:'Temp',data:tempData,yAxisID:'yRight',tension:0.1,segment:{borderColor:ctx=>isVitalNormal('Temp',ctx.p1.raw)?nColor:abColor},pointBackgroundColor:ctx=>isVitalNormal('Temp',ctx.raw)?nColor:abColor,pointBorderColor:ctx=>isVitalNormal('Temp',ctx.raw)?nColor:abColor},{label:'Sys BP',data:sysData,yAxisID:'yLeft',tension:0.1,segment:{borderColor:ctx=>{const i=ctx.p1DataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;}},pointBackgroundColor:ctx=>{const i=ctx.dataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;},pointBorderColor:ctx=>{const i=ctx.dataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;}},{label:'Dia BP',data:diaData,yAxisID:'yLeft',tension:0.1,segment:{borderColor:ctx=>{const i=ctx.p1DataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;}},pointBackgroundColor:ctx=>{const i=ctx.dataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;},pointBorderColor:ctx=>{const i=ctx.dataIndex;return isVitalNormal('BP',sysData[i],diaData[i])?nColor:abColor;}}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false,},scales:{x:{display:true,title:{display:true,text:'Time'}},yLeft:{type:'linear',display:true,position:'left',title:{display:true,text:'HR,SpO2,BP'},suggestedMin:40,suggestedMax:160},yRight:{type:'linear',display:true,position:'right',title:{display:true,text:'RR,Temp'},suggestedMin:10,suggestedMax:40,grid:{drawOnChartArea:false,}}},plugins:{tooltip:{mode:'index',intersect:false},title:{display:true,text:'Vitals Trend'}}}});}
+        function checkPatientVitals(pid) { if(!Array.isArray(vitalSigns)){return{isAbnormal:false,message:''};}const pv=vitalSigns.filter(v=>v.patientId===pid);if(pv.length===0){return{isAbnormal:false,message:''};}const lv=pv.map(v=>({...v,dateObj:new Date(v.dateTime)})).filter(v=>!isNaN(v.dateObj.getTime())).sort((a,b)=>b.dateObj-a.dateObj)[0];if(!lv){return{isAbnormal:false,message:''};}let abn=[];if(lv.heartRate){const hr=parseInt(lv.heartRate);if(!isNaN(hr)&&(hr<60||hr>100))abn.push(`HR:${hr}`);}if(lv.oxygenSat){const sp=parseInt(lv.oxygenSat);if(!isNaN(sp)&&sp<94)abn.push(`SpO2:${sp}%`);}if(lv.bloodPressure&&typeof lv.bloodPressure==='string'&&lv.bloodPressure.includes('/')){const p=lv.bloodPressure.split('/');const s=parseInt(p[0]),d=parseInt(p[1]);if((!isNaN(s)&&(s<90||s>140))||(!isNaN(d)&&d>90))abn.push(`BP:${lv.bloodPressure}`);}if(lv.respiratoryRate){const rr=parseInt(lv.respiratoryRate);if(!isNaN(rr)&&(rr<12||rr>20))abn.push(`RR:${rr}`);}if(lv.temperature){const t=parseFloat(lv.temperature);if(!isNaN(t)&&(t<36.0||t>38.0))abn.push(`Temp:${t}°C`);}return{isAbnormal:abn.length>0,message:abn.join(', ')};}
+        function showListModal(listType){const mT=document.getElementById('listModalTitle');const mC=document.getElementById('listModalContent');let lH='<div class="empty-state">No items.</div>';let items=[];if(!mT||!mC){console.error("List modal elements not found!");return;}const getPatientName=(pId)=>{const p=(patients||[]).find(pt=>pt.id===pId);return p?p.name:'Unknown Patient';};switch(listType){case 'patients':mT.textContent='All Patients';items=(patients||[]).filter(p=>p&&p.id&&p.name);if(items.length>0){lH=items.map(p=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('patient','${p.id}')"><strong>${p.name||'N/A'}</strong> (${p.id||'N/A'})<div style="font-size:13px;color:#6c757d;">${p.age||'N/A'}y•${p.sex||'N/A'}•Comp:${p.chiefComplaint||'N/A'}</div></div>`).join('');}break;case 'orders':mT.textContent='Active Orders';items=(doctorOrders||[]).filter(o=>o&&o.status!=='Completed'&&o.patientId);if(items.length>0){const owpn=items.map(o=>({...o,pN:getPatientName(o.patientId)}));lH=owpn.map(o=>`<div class="search-result-item" style="position:relative;"><div style="cursor:pointer;" onclick="navigateFromList('order','${o.patientId}','${o.id}')"><strong>Order ${o.orderId||'N/A'}</strong> for <strong>${o.pN}</strong>(${o.patientId})<div style="font-size:13px;color:#6c757d;">Date:${o.date||'N/A'}•Dr:${o.doctorName||'N/A'}•St:${o.status||'N/A'}</div><div style="font-size:13px;color:#555;margin-top:5px;">Det:${String(o.orderDetails||'').substring(0,100)}${String(o.orderDetails||'').length>100?'...':''}</div></div><button class="action-btn" style="position:absolute;top:10px;right:10px;background-color:#28a745;color:white;padding:4px 10px;font-size:11px;" onclick="completeOrder('${o.id}','${o.patientId}',event)">Complete</button></div>`).join('');}break;case 'labs':mT.textContent='All Lab Results';items=(laboratoryRecords||[]).filter(l=>l&&l.patientId&&l.status==='Completed');if(items.length>0){const lwpm=items.map(l=>({...l,pN:getPatientName(l.patientId)}));lH=lwpm.map(l=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('lab','${l.patientId}','${l.id}')"><strong>${l.testType||'N/A'}</strong>(${l.requestId||'N/A'}) for <strong>${l.pN}</strong>(${l.patientId})<div style="font-size:13px;color:#6c757d;">Comp:${l.dateCompleted||'N/A'}•By:${l.interpretedBy||'N/A'}</div><div style="font-size:13px;color:#555;margin-top:5px;">Res:${String(l.results||'N/A').substring(0,100)}${String(l.results||'').length>100?'...':''}</div></div>`).join('');}break;case 'labRequests':mT.textContent='Lab Requests';items=(laboratoryRecords||[]).filter(l=>l&&l.patientId&&l.status!=='Completed');if(items.length>0){const lwpm=items.map(l=>({...l,pN:getPatientName(l.patientId)}));lH=lwpm.map(l=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('lab','${l.patientId}','${l.id}')"><strong>${l.testType||'N/A'}</strong>(${l.requestId||'N/A'}) for <strong>${l.pN}</strong>(${l.patientId})<div style="font-size:13px;color:#6c757d;">Req:${l.dateRequested||'N/A'}•Status:${l.status||'Pending'}</div><div style="font-size:13px;color:#555;margin-top:5px;">Notes:${String(l.notes||'None').substring(0,100)}${String(l.notes||'').length>100?'...':''}</div></div>`).join('');}break;case 'meds':mT.textContent='All Meds';items=(medications||[]).filter(m=>m&&m.patientId);if(items.length>0){const mwpm=items.map(m=>({...m,pN:getPatientName(m.patientId)}));lH=mwpm.map(m=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('med','${m.patientId}','${m.id}')"><strong>${m.drugName||'N/A'} ${m.dosage||''}</strong> for <strong>${m.pN}</strong>(${m.patientId})<div style="font-size:13px;color:#6c757d;">R:${m.route||'N/A'}•F:${m.frequency||'N/A'}•St:${m.startDate||'N/A'}</div></div>`).join('');}break;case 'medHistory':mT.textContent='All Med History';items=(medicalHistory||[]).filter(mh=>mh&&mh.patientId);if(items.length>0){const mhwpm=items.map(mh=>({...mh,pN:getPatientName(mh.patientId)}));lH=mhwpm.map(mh=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('medical-history','${mh.patientId}','${mh.id}')">Record for <strong>${mh.pN}</strong>(${mh.patientId})<div style="font-size:13px;color:#6c757d;">Allergies:${mh.allergies?mh.allergies.substring(0,50)+'...':'None'}•Past:${mh.pastConditions?mh.pastConditions.substring(0,50)+'...':'None'}</div></div>`).join('');}break;case 'allOrders':mT.textContent='All Orders';items=(doctorOrders||[]).filter(o=>o&&o.patientId);if(items.length>0){const aowpm=items.map(o=>({...o,pN:getPatientName(o.patientId)}));lH=aowpm.map(o=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('order','${o.patientId}','${o.id}')"><strong>Order ${o.orderId||'N/A'}</strong> for <strong>${o.pN}</strong>(${o.patientId})<div style="font-size:13px;color:#6c757d;">Date:${o.date||'N/A'}•Dr:${o.doctorName||'N/A'}•St:${o.status||'N/A'}</div></div>`).join('');}break;case 'nurseNotes':mT.textContent='All Nurse Notes';items=(nurseNotes||[]).filter(n=>n&&n.patientId);if(items.length>0){const nnwpm=items.map(n=>({...n,pN:getPatientName(n.patientId)}));lH=nnwpm.map(n=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('nurses-notes','${n.patientId}','${n.id}')">Note for <strong>${n.pN}</strong>(${n.patientId}) on <strong>${n.date||'N/A'}</strong><div style="font-size:13px;color:#6c757d;">Nurse:${n.nurseName||'N/A'}</div></div>`).join('');}break;case 'vitals':mT.textContent='All Vitals';items=(vitalSigns||[]).filter(v=>v&&v.patientId);if(items.length>0){items.sort((a,b)=>{if(a.patientId<b.patientId)return -1;if(a.patientFord>b.patientFord)return 1;return new Date(b.dateTime)-new Date(a.dateTime);});const vwpm=items.map(v=>({...v,pN:getPatientName(v.patientId)}));lH=vwpm.map(v=>`<div class="search-result-item" style="cursor:pointer;" onclick="navigateFromList('vital-signs','${v.patientId}','${v.id}')">Vitals for <strong>${v.pN}</strong>(${v.patientId}) at <strong>${v.dateTime?v.dateTime.replace('T',' '):'N/A'}</strong><div style="font-size:13px;color:#6c757d;">BP:${v.bloodPressure||'N/A'}•HR:${v.heartRate||'N/A'}•SpO2:${v.oxygenSat||'N/A'}</div></div>`).join('');}break;default:console.error("Unknown listType:",listType);mT.textContent="Error";lH='<div class="empty-state">Invalid list type.</div>';}mC.innerHTML=lH;document.getElementById('listModal').classList.add('show');}
+        function navigateFromList(type,patientId,recordId=null){closeModal('listModal');const pe=patients.some(p=>p.id===patientId);if(!pe){alert("Patient not found.");return;}viewPatientProfile(patientId);setTimeout(()=>{let tt='overview';switch(type){case 'patient':tt='overview';break;case 'order':case 'doctors-orders':tt='doctors-orders';break;case 'lab':case 'laboratory':tt='laboratory';break;case 'med':case 'medications':tt='medications';break;case 'medHistory':case 'medical-history':tt='medical-history';break;case 'nurseNotes':case 'nurses-notes':tt='nurses-notes';break;case 'vitals':case 'vital-signs':tt='vital-signs';break;}const tb=document.querySelector(`.profile-tab[onclick*="showTab('${tt}'"]`);if(tb){tb.click();}},100);}
+        async function completeOrder(orderId, patientId, event) { if(event) event.stopPropagation(); const orderIndex = doctorOrders.findIndex(o => o.id === orderId); if (orderIndex === -1) { alert("Error: Order not found."); return; } const order = doctorOrders[orderIndex]; if (confirm(`Mark Order ${order.orderId} as 'Completed'?`)) { const payload = { sheet: 'DoctorsOrders', action: 'update', id: orderId, data: { status: 'Completed' } }; const result = await postData(payload); if (result) { doctorOrders[orderIndex].status = 'Completed'; updateDashboard(); if (currentPatient && currentPatient.id === patientId && document.getElementById('patientProfile').classList.contains('active')) { loadDoctorOrders(patientId); } const listModal = document.getElementById('listModal'); const listModalTitle = document.getElementById('listModalTitle'); if (listModal.classList.contains('show') && listModalTitle.textContent.includes('Active')) { showListModal('orders'); } else { alert('Order marked as complete.'); } } else { console.log("Backend unavailable, using local storage fallback"); doctorOrders[orderIndex].status = 'Completed'; localStorage.setItem('doctorOrders', JSON.stringify(doctorOrders)); updateDashboard(); if (currentPatient && currentPatient.id === patientId && document.getElementById('patientProfile').classList.contains('active')) { loadDoctorOrders(patientId); } alert('Order marked as complete (saved locally).'); } } }
+    </script>
+</body>
+</html>

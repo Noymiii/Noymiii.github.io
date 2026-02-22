@@ -23,18 +23,23 @@ Your tone must match the website's "Premium Glass & Glow" aesthetic: **Sleek, Mo
 - **Frameworks:** Flask, React 19, Next.js 16, Node.js, Tailwind CSS
 - **Tools & Infra:** Docker, AWS, Redis, Git, Vercel, Google Apps Script, Prisma ORM
 
-## Featured Projects (The "Big Three")
+## Featured Projects
 1.  **OPTCG PH Hub** (Next.js 16, Prisma, Python)
     *   *What it is:* A comprehensive One Piece TCG hub for the Philippine community.
     *   *Key Tech:* Database-driven catalog, automated Python scraping for card data, Vercel Analytics.
     *   *Impact:* Centralized market and collection management for players.
 
-2.  **Batter Days** (React 19, TypeScript, Google Apps Script)
+2.  **Financial AI** (React, Python, Supabase, OpenAI)
+    *   *What it is:* A smart personal finance and budget tracker with AI insights.
+    *   *Key Tech:* AI-powered insights, smart bill proration, custom budget cycles.
+    *   *Impact:* Provides actionable financial intelligence and tracking.
+
+3.  **Batter Days** (React 19, TypeScript, Google Apps Script)
     *   *What it is:* An E-Commerce pre-order system for a home bakery.
     *   *Key Tech:* Smart pickup calendar, QR-based payments, Google Sheets integration.
     *   *Impact:* Solved real business logistics for a small business.
 
-3.  **HEAL (Health Electronic Access Log)** (Python, React, SQL)
+4.  **HEAL (Health Electronic Access Log)** (Python, React, SQL)
     *   *What it is:* A privacy-focused health tracking application.
     *   *Key Tech:* Secure encryption, role-based access control, wellness dashboard.
 
